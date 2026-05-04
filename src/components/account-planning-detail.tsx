@@ -35,8 +35,8 @@ interface AccountInfo {
   city: string | null
   incumbent: string | null
   data_challenge: string | null
-  qumulo_fit: string | null
-  displacement_story: string | null
+  stardog_fit: string | null
+
   notes: string | null
 }
 

@@ -8,7 +8,7 @@ export interface Company {
   urgency: 'high' | 'medium' | 'low'
   amount: string | null
   date: string
-  why_qumulo: string
+  why_stardog: string
 }
 
 export interface Signal {
@@ -34,7 +34,7 @@ export interface Intel {
   relevance_label: string
   relevance_color: string
   snapshot: string
-  qumulo_fit: string
+  stardog_fit: string
   data_challenge: string
   signals: Signal[]
   target_contacts: Contact[]

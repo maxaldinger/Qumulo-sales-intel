@@ -49,13 +49,13 @@ export async function POST(req: Request) {
     if (typeof ai_confidence === 'number') update.ai_confidence = ai_confidence
 
     const { error: upsertErr } = await db
-      .from('q_contact_roles')
+      .from('sg_contact_roles')
       .upsert(update, { onConflict: 'contact_id' })
 
     if (upsertErr) throw upsertErr
 
     const { data: roles, error: fetchErr } = await db
-      .from('q_contact_roles')
+      .from('sg_contact_roles')
       .select('*')
       .eq('tenant_id', QUMULO_TENANT_ID)
       .eq('account_id', account_id)
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
     const score = computeCoverageScore((roles || []) as ContactRole[])
 
     const { error: planErr } = await db
-      .from('q_account_plans')
+      .from('sg_account_plans')
       .upsert(
         {
           account_id,

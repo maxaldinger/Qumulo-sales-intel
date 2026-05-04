@@ -17,23 +17,23 @@ export async function GET(_req: Request, { params }: RouteCtx) {
 
     const [accountRes, contactsRes, rolesRes, planRes] = await Promise.all([
       db
-        .from('q_territory_accounts')
-        .select('id, company, vertical, revenue, state, city, incumbent, data_challenge, qumulo_fit, displacement_story, notes')
+        .from('sg_territory_accounts')
+        .select('id, company, vertical, revenue, data_challenge, stardog_fit, notes')
         .eq('id', accountId)
         .maybeSingle(),
       db
-        .from('q_contacts')
+        .from('sg_contacts')
         .select('*')
         .eq('tenant_id', QUMULO_TENANT_ID)
         .eq('account_id', accountId)
         .order('created_at', { ascending: true }),
       db
-        .from('q_contact_roles')
+        .from('sg_contact_roles')
         .select('*')
         .eq('tenant_id', QUMULO_TENANT_ID)
         .eq('account_id', accountId),
       db
-        .from('q_account_plans')
+        .from('sg_account_plans')
         .select('*')
         .eq('tenant_id', QUMULO_TENANT_ID)
         .eq('account_id', accountId)

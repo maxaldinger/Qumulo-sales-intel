@@ -53,13 +53,13 @@ const NODES: GraphNode[] = [
     inputs: ['Structured prompts with context data'], outputs: ['JSON responses: companies, Intel objects, analysis'], tech: 'claude-haiku-4-5-20251001 • @anthropic-ai/sdk • JSON mode' },
 
   // Supabase Tables (x=730)
-  { id: 'q_feed_cache', label: 'q_feed\n_cache', type: 'database', x: 730, y: 100,
+  { id: 'sg_feed_cache', label: 'sg_feed\n_cache', type: 'database', x: 730, y: 100,
     description: 'Feed snapshot cache. Stores full company list as JSONB with timestamp. 12-hour TTL. Stale cache served as fallback on API failure.',
     inputs: ['INSERT: { companies: jsonb }'], outputs: ['SELECT: latest snapshot within TTL'], tech: 'Supabase • uuid PK • idx on fetched_at DESC • 12h TTL' },
-  { id: 'q_company_intel', label: 'q_company\n_intel', type: 'database', x: 730, y: 280,
+  { id: 'sg_company_intel', label: 'sg_company\n_intel', type: 'database', x: 730, y: 280,
     description: 'Per-company analysis cache. Primary key on company name. Stores full Intel JSONB object. 24-hour TTL before re-analysis.',
     inputs: ['UPSERT on company: { intel, vertical, urgency }'], outputs: ['SELECT by company with TTL check'], tech: 'Supabase • text PK (company) • JSONB intel column • 24h TTL' },
-  { id: 'q_signal_timeline', label: 'q_signal\n_timeline', type: 'database', x: 730, y: 460,
+  { id: 'sg_signal_timeline', label: 'sg_signal\n_timeline', type: 'database', x: 730, y: 460,
     description: 'Deduplicated signal history. Unique constraint on (company, signal_text) prevents duplicate signals. Chronological record of all detected buying signals.',
     inputs: ['UPSERT: { company, signal_type, urgency, signal_text }'], outputs: ['SELECT by company ORDER BY first_seen_at DESC LIMIT 50'], tech: 'Supabase • UNIQUE(company, signal_text) • idx on (company, first_seen_at)' },
 
@@ -83,21 +83,21 @@ const EDGES: GraphEdge[] = [
   { from: 'google_rss', to: 'api_feed', label: 'fetches_rss' },
   { from: 'usaspending', to: 'api_feed', label: 'fetches_contracts' },
   { from: 'api_feed', to: 'claude_haiku', label: 'calls_claude' },
-  { from: 'api_feed', to: 'q_feed_cache', label: 'writes_cache' },
-  { from: 'q_feed_cache', to: 'api_feed', label: 'reads_cache' },
-  { from: 'api_feed', to: 'q_signal_timeline', label: 'upserts_signals' },
+  { from: 'api_feed', to: 'sg_feed_cache', label: 'writes_cache' },
+  { from: 'sg_feed_cache', to: 'api_feed', label: 'reads_cache' },
+  { from: 'api_feed', to: 'sg_signal_timeline', label: 'upserts_signals' },
 
   // /api/analyze data flow
   { from: 'google_rss', to: 'api_analyze', label: 'fetches_news' },
   { from: 'usaspending', to: 'api_analyze', label: 'fetches_contracts' },
   { from: 'web_scraper', to: 'api_analyze', label: 'scrapes_site' },
   { from: 'api_analyze', to: 'claude_haiku', label: 'calls_claude' },
-  { from: 'api_analyze', to: 'q_company_intel', label: 'writes_intel' },
-  { from: 'q_company_intel', to: 'api_analyze', label: 'reads_cache' },
-  { from: 'api_analyze', to: 'q_signal_timeline', label: 'upserts_signals' },
+  { from: 'api_analyze', to: 'sg_company_intel', label: 'writes_intel' },
+  { from: 'sg_company_intel', to: 'api_analyze', label: 'reads_cache' },
+  { from: 'api_analyze', to: 'sg_signal_timeline', label: 'upserts_signals' },
 
   // /api/timeline data flow
-  { from: 'api_timeline', to: 'q_signal_timeline', label: 'queries_db' },
+  { from: 'api_timeline', to: 'sg_signal_timeline', label: 'queries_db' },
 
   // /api/meddpicc data flow
   { from: 'api_meddpicc', to: 'claude_haiku', label: 'calls_claude' },

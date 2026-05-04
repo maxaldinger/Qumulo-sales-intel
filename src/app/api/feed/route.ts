@@ -97,7 +97,7 @@ export async function GET(req: Request) {
     if (!force) {
       try {
         const { data: cached, error: cacheError } = await db
-          .from('q_feed_cache')
+          .from('sg_feed_cache')
           .select('*')
           .order('fetched_at', { ascending: false })
           .limit(1)
@@ -139,7 +139,7 @@ export async function GET(req: Request) {
     if (allHeadlines.length === 0) {
       console.error('[feed] Zero headlines fetched')
       try {
-        const { data: stale } = await db.from('q_feed_cache').select('*').order('fetched_at', { ascending: false }).limit(1).single()
+        const { data: stale } = await db.from('sg_feed_cache').select('*').order('fetched_at', { ascending: false }).limit(1).single()
         if (stale?.companies) return NextResponse.json({ companies: stale.companies, fetched_at: stale.fetched_at, cached: true, stale: true })
       } catch (staleErr: any) {
         console.error('[feed] Stale cache fallback threw:', staleErr.message)
@@ -209,7 +209,7 @@ Focus on enterprises with unstructured data scale, cloud migrations, AI/ML build
     } catch (claudeErr: any) {
       console.error('[feed] Claude extraction failed:', claudeErr.message, claudeErr.stack)
       try {
-        const { data: stale } = await db.from('q_feed_cache').select('*').order('fetched_at', { ascending: false }).limit(1).single()
+        const { data: stale } = await db.from('sg_feed_cache').select('*').order('fetched_at', { ascending: false }).limit(1).single()
         if (stale?.companies) return NextResponse.json({ companies: stale.companies, fetched_at: stale.fetched_at, cached: true, stale: true })
       } catch (staleErr: any) {
         console.error('[feed] Stale cache fallback threw:', staleErr.message)
@@ -219,7 +219,7 @@ Focus on enterprises with unstructured data scale, cloud migrations, AI/ML build
 
     for (const c of companies) {
       try {
-        await db.from('q_signal_timeline').upsert(
+        await db.from('sg_signal_timeline').upsert(
           { company: c.company, signal_type: c.signal_type, urgency: c.urgency, signal_text: c.top_signal, signal_date: c.date },
           { onConflict: 'company,signal_text' }
         ).select()
@@ -229,7 +229,7 @@ Focus on enterprises with unstructured data scale, cloud migrations, AI/ML build
     }
 
     try {
-      const { error: insertErr } = await db.from('q_feed_cache').insert({ companies })
+      const { error: insertErr } = await db.from('sg_feed_cache').insert({ companies })
       if (insertErr) console.error('[feed] Cache insert error:', insertErr.message, insertErr.code)
     } catch (cacheInsertErr: any) {
       console.error('[feed] Cache insert threw:', cacheInsertErr.message)

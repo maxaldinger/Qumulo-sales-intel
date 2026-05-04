@@ -54,7 +54,7 @@ Hard rules:
     if (save) {
       const db = getDb()
       const { error } = await db
-        .from('q_account_plans')
+        .from('sg_account_plans')
         .upsert(
           {
             account_id,

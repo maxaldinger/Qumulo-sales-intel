@@ -7,7 +7,7 @@ export async function GET() {
     const db = getDb()
 
     const { data: rawAccounts, error: accErr } = await db
-      .from('q_territory_accounts')
+      .from('sg_territory_accounts')
       .select('id, company, vertical, priority, created_at')
 
     if (accErr) throw accErr
@@ -27,17 +27,17 @@ export async function GET() {
     // supabase-js quirk: chaining .eq() before .in() returns 0 rows. Put .in() first.
     const [contactsRes, rolesRes, plansRes] = await Promise.all([
       db
-        .from('q_contacts')
+        .from('sg_contacts')
         .select('id, account_id')
         .in('account_id', accountIds)
         .eq('tenant_id', QUMULO_TENANT_ID),
       db
-        .from('q_contact_roles')
+        .from('sg_contact_roles')
         .select('account_id, role, stance')
         .in('account_id', accountIds)
         .eq('tenant_id', QUMULO_TENANT_ID),
       db
-        .from('q_account_plans')
+        .from('sg_account_plans')
         .select('account_id, coverage_score, last_updated')
         .in('account_id', accountIds)
         .eq('tenant_id', QUMULO_TENANT_ID),

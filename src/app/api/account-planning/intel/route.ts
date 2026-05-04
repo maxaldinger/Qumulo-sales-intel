@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     const cleaned = stripEmDashes(typeof intel_brief === 'string' ? intel_brief : '')
 
     const { error } = await db
-      .from('q_account_plans')
+      .from('sg_account_plans')
       .upsert(
         {
           account_id,

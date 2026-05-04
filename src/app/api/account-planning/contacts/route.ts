@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     const db = getDb()
 
     const { data: contact, error: contactErr } = await db
-      .from('q_contacts')
+      .from('sg_contacts')
       .insert({
         account_id,
         name: name.trim(),
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
         : 3
 
     const { error: roleErr } = await db
-      .from('q_contact_roles')
+      .from('sg_contact_roles')
       .insert({
         contact_id: contact.id,
         account_id,
@@ -80,7 +80,7 @@ export async function DELETE(req: Request) {
     const db = getDb()
 
     const { data: contact, error: lookupErr } = await db
-      .from('q_contacts')
+      .from('sg_contacts')
       .select('account_id')
       .eq('id', id)
       .eq('tenant_id', QUMULO_TENANT_ID)
@@ -92,7 +92,7 @@ export async function DELETE(req: Request) {
     }
 
     const { error: delErr } = await db
-      .from('q_contacts')
+      .from('sg_contacts')
       .delete()
       .eq('id', id)
       .eq('tenant_id', QUMULO_TENANT_ID)
@@ -112,7 +112,7 @@ export async function DELETE(req: Request) {
 async function recalcCoverage(accountId: string) {
   const db = getDb()
   const { data: roles, error } = await db
-    .from('q_contact_roles')
+    .from('sg_contact_roles')
     .select('*')
     .eq('tenant_id', QUMULO_TENANT_ID)
     .eq('account_id', accountId)
@@ -125,7 +125,7 @@ async function recalcCoverage(accountId: string) {
   const score = computeCoverageScore((roles || []) as ContactRole[])
 
   const { error: upsertErr } = await db
-    .from('q_account_plans')
+    .from('sg_account_plans')
     .upsert(
       {
         account_id: accountId,

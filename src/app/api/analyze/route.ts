@@ -67,7 +67,7 @@ export async function POST(req: Request) {
   const db = getDb()
 
   // Check cache
-  const { data: cached } = await db.from('q_company_intel').select('*').eq('company', company).single()
+  const { data: cached } = await db.from('sg_company_intel').select('*').eq('company', company).single()
   if (cached?.intel && cached.last_analyzed_at) {
     const age = (Date.now() - new Date(cached.last_analyzed_at).getTime()) / 3600000
     if (age < INTEL_TTL_HOURS) {
@@ -148,7 +148,7 @@ Include 4-6 signals and 4 target contacts. Return ONLY the JSON object.`
     // Write signals to timeline
     if (intel.signals) {
       for (const s of intel.signals) {
-        await db.from('q_signal_timeline').upsert(
+        await db.from('sg_signal_timeline').upsert(
           { company, signal_type: s.type, urgency: s.urgency, signal_text: s.text, signal_date: s.date },
           { onConflict: 'company,signal_text' }
         ).select()
@@ -156,13 +156,13 @@ Include 4-6 signals and 4 target contacts. Return ONLY the JSON object.`
     }
 
     // Cache
-    await db.from('q_company_intel').upsert({
+    await db.from('sg_company_intel').upsert({
       company,
       vertical_id: intel.primary_vertical?.toLowerCase().replace(/[^a-z]/g, '').slice(0, 12),
       vertical_label: intel.primary_vertical,
       urgency: intel.relevance_score >= 80 ? 'high' : intel.relevance_score >= 60 ? 'medium' : 'low',
       top_signal: intel.signals?.[0]?.text || '',
-      why_qumulo: intel.qumulo_fit,
+      why_stardog: intel.qumulo_fit,
       intel,
       last_analyzed_at: new Date().toISOString(),
     }, { onConflict: 'company' }).select()
