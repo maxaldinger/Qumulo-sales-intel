@@ -369,7 +369,7 @@ export default function TerritoryPlan() {
             onClick={() => setShowImport(p => !p)}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
               showImport
-                ? 'bg-qumulo-orange/20 text-qumulo-orange border border-qumulo-orange/30'
+                ? 'bg-sherpa/20 text-cyan-400 border border-cyan-500/30'
                 : 'bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10 hover:text-slate-200'
             }`}
           >
@@ -417,14 +417,14 @@ export default function TerritoryPlan() {
             onChange={e => setImportText(e.target.value)}
             placeholder={'TGen, Phoenix, AZ\nMicron Technology, Lehi, UT\nNREL, Golden, CO'}
             rows={5}
-            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-qumulo-orange/50 text-sm resize-none leading-relaxed"
+            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 text-sm resize-none leading-relaxed"
           />
 
           <div className="flex items-center gap-4">
             <button
               onClick={importAccounts}
               disabled={importing || !importText.trim()}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-qumulo-orange text-white font-medium text-sm hover:bg-qumulo-orange-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-sherpa text-white font-medium text-sm hover:bg-[#005068] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {importing ? (
                 <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Importing...</>
@@ -436,7 +436,7 @@ export default function TerritoryPlan() {
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <button
                 onClick={() => setIncludeDefaults(p => !p)}
-                className={`relative w-9 h-5 rounded-full transition-colors ${includeDefaults ? 'bg-qumulo-orange' : 'bg-white/10'}`}
+                className={`relative w-9 h-5 rounded-full transition-colors ${includeDefaults ? 'bg-sherpa' : 'bg-white/10'}`}
               >
                 <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${includeDefaults ? 'translate-x-4' : ''}`} />
               </button>
@@ -449,7 +449,7 @@ export default function TerritoryPlan() {
               {Object.entries(importProgress).map(([name, status]) => (
                 <div key={name} className="flex items-center gap-2 text-xs">
                   {status === 'pending' && <div className="w-3.5 h-3.5 rounded-full border border-slate-600" />}
-                  {status === 'loading' && <Loader2 className="w-3.5 h-3.5 text-qumulo-orange animate-spin" />}
+                  {status === 'loading' && <Loader2 className="w-3.5 h-3.5 text-cyan-400 animate-spin" />}
                   {status === 'done' && <Check className="w-3.5 h-3.5 text-emerald-400" />}
                   {status === 'error' && <X className="w-3.5 h-3.5 text-red-400" />}
                   <span className={status === 'done' ? 'text-slate-300' : status === 'error' ? 'text-red-400' : 'text-slate-400'}>
@@ -467,7 +467,7 @@ export default function TerritoryPlan() {
       <div className="grid grid-cols-3 gap-4">
         <div className="p-4 rounded-xl bg-white/5 border border-white/10">
           <div className="flex items-center gap-2 mb-1">
-            <Building2 className="w-4 h-4 text-qumulo-orange" />
+            <Building2 className="w-4 h-4 text-cyan-400" />
             <span className="text-xs text-slate-400">Target Accounts</span>
           </div>
           <div className="text-2xl font-bold text-white">{allAccounts.length}</div>
@@ -531,8 +531,8 @@ export default function TerritoryPlan() {
                         <div className="text-[10px] uppercase tracking-wider text-red-400 mb-1">Incumbent Pain</div>
                         <p className="text-xs text-slate-300">{a.data_challenge}</p>
                       </div>
-                      <div className="p-3 rounded-lg bg-qumulo-orange/5 border border-qumulo-orange/20">
-                        <div className="text-[10px] uppercase tracking-wider text-qumulo-orange mb-1">Qumulo Fit</div>
+                      <div className="p-3 rounded-lg bg-sherpa/5 border border-cyan-500/20">
+                        <div className="text-[10px] uppercase tracking-wider text-cyan-400 mb-1">Qumulo Fit</div>
                         <p className="text-xs text-slate-300">{a.qumulo_fit}</p>
                       </div>
                     </div>
@@ -551,7 +551,7 @@ export default function TerritoryPlan() {
                             href={linkedinUrl(p, a.company)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 text-xs text-qumulo-orange hover:bg-qumulo-orange/10 hover:text-qumulo-orange transition-all"
+                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 text-xs text-cyan-400 hover:bg-sherpa/10 hover:text-cyan-400 transition-all"
                           >
                             {p}
                             <ExternalLink className="w-3 h-3 opacity-60" />
@@ -563,7 +563,7 @@ export default function TerritoryPlan() {
                     <button
                       onClick={() => aiResearch(idx)}
                       disabled={researching[idx]}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-qumulo-orange/10 text-qumulo-orange hover:bg-qumulo-orange/20 transition-all text-xs font-medium"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sherpa/10 text-cyan-400 hover:bg-sherpa/20 transition-all text-xs font-medium"
                     >
                       {researching[idx] ? (
                         <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Researching...</>
@@ -579,9 +579,9 @@ export default function TerritoryPlan() {
                           <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2">
                               <div className="w-24 h-2 rounded-full bg-white/10 overflow-hidden">
-                                <div className="h-full rounded-full bg-qumulo-orange" style={{ width: `${intel.relevance_score}%` }} />
+                                <div className="h-full rounded-full bg-sherpa" style={{ width: `${intel.relevance_score}%` }} />
                               </div>
-                              <span className="text-xs text-qumulo-orange font-mono">{intel.relevance_score}%</span>
+                              <span className="text-xs text-cyan-400 font-mono">{intel.relevance_score}%</span>
                             </div>
                             <span className="text-[10px] text-slate-400">{intel.relevance_label}</span>
                             {intel.hq && <span className="text-[10px] text-slate-500">HQ: {intel.hq}</span>}
@@ -592,8 +592,8 @@ export default function TerritoryPlan() {
                               <div className="text-[10px] uppercase tracking-wider text-red-400 mb-1">Data Challenge</div>
                               <p className="text-xs text-slate-300">{intel.data_challenge}</p>
                             </div>
-                            <div className="p-3 rounded-lg bg-qumulo-orange/5 border border-qumulo-orange/20">
-                              <div className="text-[10px] uppercase tracking-wider text-qumulo-orange mb-1">Qumulo Fit</div>
+                            <div className="p-3 rounded-lg bg-sherpa/5 border border-cyan-500/20">
+                              <div className="text-[10px] uppercase tracking-wider text-cyan-400 mb-1">Qumulo Fit</div>
                               <p className="text-xs text-slate-300">{intel.qumulo_fit}</p>
                             </div>
                           </div>
@@ -609,7 +609,7 @@ export default function TerritoryPlan() {
                               <ul className="space-y-1">
                                 {intel.talking_points.map((pt: string, pi: number) => (
                                   <li key={pi} className="flex items-start gap-2 text-xs text-slate-300">
-                                    <span className="text-qumulo-orange mt-0.5">&rarr;</span> {pt}
+                                    <span className="text-cyan-400 mt-0.5">&rarr;</span> {pt}
                                   </li>
                                 ))}
                               </ul>
@@ -622,7 +622,7 @@ export default function TerritoryPlan() {
                               <div className="flex flex-wrap gap-2">
                                 {intel.target_contacts.map((c: Contact, ci: number) => (
                                   <a key={ci} href={c.linkedin_search} target="_blank" rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 text-xs text-qumulo-orange hover:bg-qumulo-orange/10 transition-all"
+                                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 text-xs text-cyan-400 hover:bg-sherpa/10 transition-all"
                                     title={c.why_target}>
                                     {c.title} <ExternalLink className="w-3 h-3 opacity-60" />
                                   </a>

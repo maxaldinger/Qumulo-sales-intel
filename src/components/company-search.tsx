@@ -74,13 +74,13 @@ export default function CompanySearch() {
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && search()}
             placeholder="Company name or website (e.g. TGen or qumulo.com)"
-            className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-qumulo-orange/50 focus:ring-1 focus:ring-qumulo-orange/20 text-sm"
+            className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 text-sm"
           />
         </div>
         <button
           onClick={search}
           disabled={loading || !query.trim()}
-          className="px-6 rounded-xl bg-qumulo-orange text-white font-medium text-sm hover:bg-qumulo-orange-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 rounded-xl bg-sherpa text-white font-medium text-sm hover:bg-[#005068] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Analyze'}
         </button>
@@ -91,7 +91,7 @@ export default function CompanySearch() {
           <div className="space-y-2">
             {STEPS.map((s, i) => (
               <div key={i} className={`flex items-center gap-3 text-sm transition-all duration-300 ${
-                i < step ? 'text-emerald-400' : i === step ? 'text-qumulo-orange' : 'text-slate-600'
+                i < step ? 'text-emerald-400' : i === step ? 'text-cyan-400' : 'text-slate-600'
               }`}>
                 {i < step ? (
                   <Check className="w-4 h-4" />
@@ -114,7 +114,7 @@ export default function CompanySearch() {
       {result && (
         <div className="p-6 rounded-xl bg-white/[0.03] border border-white/10">
           <div className="flex justify-end mb-4">
-            <button onClick={copyAll} className="text-xs text-qumulo-orange hover:opacity-80 flex items-center gap-1">
+            <button onClick={copyAll} className="text-xs text-cyan-400 hover:opacity-80 flex items-center gap-1">
               {copied ? <><Check className="w-3 h-3" /> Copied</> : <><Copy className="w-3 h-3" /> Copy Brief</>}
             </button>
           </div>
@@ -124,8 +124,8 @@ export default function CompanySearch() {
 
       {!loading && !result && !error && (
         <div className="text-center py-16">
-          <div className="w-16 h-16 rounded-2xl bg-qumulo-orange/10 flex items-center justify-center mx-auto mb-4">
-            <Search className="w-8 h-8 text-qumulo-orange/60" />
+          <div className="w-16 h-16 rounded-2xl bg-sherpa/10 flex items-center justify-center mx-auto mb-4">
+            <Search className="w-8 h-8 text-cyan-400/60" />
           </div>
           <p className="text-slate-400 text-sm">Enter a company name to generate a full Qumulo intelligence brief</p>
           <div className="flex items-center justify-center gap-2 mt-4">

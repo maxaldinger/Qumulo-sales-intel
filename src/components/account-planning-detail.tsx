@@ -179,7 +179,7 @@ function StakeholderMap({
         <h3 className="text-sm font-semibold text-white">Stakeholder Map</h3>
         <button
           onClick={() => setAdding(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-qumulo-orange text-white text-xs hover:bg-qumulo-orange-hover transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sherpa text-white text-xs hover:bg-[#005068] transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
           Add Contact
@@ -294,7 +294,7 @@ function AddContactForm({
         <button
           onClick={submit}
           disabled={saving || !name.trim()}
-          className="px-3 py-1.5 rounded-lg bg-qumulo-orange text-white text-xs hover:bg-qumulo-orange-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 py-1.5 rounded-lg bg-sherpa text-white text-xs hover:bg-[#005068] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? 'Saving...' : 'Save Contact'}
         </button>

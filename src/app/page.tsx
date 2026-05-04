@@ -2,16 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { Radio, MessageSquare, Map, Network, Shield, ShieldCheck, Users, Presentation } from 'lucide-react'
+import { Radio, MessageSquare, Map, Network, Shield, ShieldCheck, Users } from 'lucide-react'
 import SignalFeed from '@/components/signal-feed'
 import SalesAssist from '@/components/sales-assist'
 import TerritoryPlan from '@/components/territory-plan'
 import KnowledgeGraph from '@/components/knowledge-graph'
 import AccountPlanning from '@/components/account-planning'
-import DemoMode from '@/components/demo-mode'
 
 const TABS = [
-  { id: 'demo',             label: 'CEO Demo',         Icon: Presentation },
   { id: 'signals',          label: 'Signal Feed',      Icon: Radio },
   { id: 'sales-assist',     label: 'Sales Assist',     Icon: MessageSquare },
   { id: 'territory',        label: 'Territory Plan',   Icon: Map },
@@ -21,7 +19,7 @@ const TABS = [
 const ADMIN_TAB = { id: 'graph', label: 'Architecture', Icon: Network }
 
 export default function Dashboard() {
-  const [tab, setTab] = useState('demo')
+  const [tab, setTab] = useState('signals')
   const [admin, setAdmin] = useState(false)
 
   useEffect(() => {
@@ -38,9 +36,9 @@ export default function Dashboard() {
   const visibleTabs = admin ? [...TABS, ADMIN_TAB] : TABS
 
   return (
-    <div className="min-h-screen bg-qumulo-ink text-white">
+    <div className="min-h-screen bg-[#0a0e1a] text-white">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-qumulo-navy-2 bg-qumulo-navy/95 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 border-b border-sherpa bg-[#111827]/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Image
@@ -48,14 +46,12 @@ export default function Dashboard() {
               alt="Qumulo"
               width={56}
               height={56}
-              className="flex-shrink-0"
+              className="opacity-80 flex-shrink-0"
             />
             <div>
-              <h1 className="text-lg font-bold tracking-tight">
-                Q<span className="text-qumulo-orange">&middot;</span>Intel
-              </h1>
+              <h1 className="text-lg font-bold tracking-tight">Q-Intel</h1>
               <p className="text-xs text-slate-400">Qumulo Territory Intelligence &mdash; Southwest Commercial</p>
-              <span className="inline-block mt-1 px-2 py-0.5 text-[9px] font-medium tracking-wide uppercase text-qumulo-orange/80 border border-qumulo-orange/30 rounded-full">
+              <span className="inline-block mt-1 px-2 py-0.5 text-[9px] font-medium tracking-wide uppercase text-teal-300/80 border border-teal-400/20 rounded-full">
                 Built for Qumulo
               </span>
             </div>
@@ -96,7 +92,7 @@ export default function Dashboard() {
                   tab === id
                     ? id === 'graph'
                       ? 'border-violet-400 text-violet-300'
-                      : 'border-qumulo-orange text-white'
+                      : 'border-sherpa text-white'
                     : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600'
                 }`}
               >
@@ -110,7 +106,6 @@ export default function Dashboard() {
 
       {/* Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {tab === 'demo' && <DemoMode />}
         {tab === 'signals' && <SignalFeed />}
         {tab === 'sales-assist' && <SalesAssist />}
         {tab === 'territory' && <TerritoryPlan />}

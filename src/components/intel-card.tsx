@@ -52,8 +52,8 @@ export default function IntelCard({ intel }: { intel: Intel }) {
 
       {/* Qumulo Fit + Data Challenge */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 rounded-lg bg-qumulo-orange/10 border border-qumulo-orange/20">
-          <div className="text-[10px] uppercase tracking-wider text-qumulo-orange mb-1">Qumulo Fit</div>
+        <div className="p-3 rounded-lg bg-sherpa/10 border border-cyan-500/20">
+          <div className="text-[10px] uppercase tracking-wider text-cyan-400 mb-1">Qumulo Fit</div>
           <p className="text-xs text-slate-300">{intel.qumulo_fit}</p>
         </div>
         <div className="p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">

@@ -145,13 +145,13 @@ export default function SignalFeed() {
             onChange={e => setSearchQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && searchCompany()}
             placeholder="Deep-dive any company (name or domain) for Qumulo fit analysis"
-            className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-qumulo-orange/50 focus:ring-1 focus:ring-qumulo-orange/20 text-sm"
+            className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 text-sm"
           />
         </div>
         <button
           onClick={searchCompany}
           disabled={searchLoading || !searchQuery.trim()}
-          className="px-6 rounded-xl bg-qumulo-orange text-white font-medium text-sm hover:bg-qumulo-orange-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 rounded-xl bg-sherpa text-white font-medium text-sm hover:bg-[#005068] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {searchLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Analyze'}
         </button>
@@ -316,8 +316,8 @@ export default function SignalFeed() {
             {expanded === c.company && (
               <div className="border-t border-white/10 p-4">
                 {/* Why Qumulo */}
-                <div className="mb-4 p-3 rounded-lg bg-qumulo-orange/5 border border-qumulo-orange/15">
-                  <span className="text-[10px] uppercase tracking-wider text-qumulo-orange">Why Qumulo</span>
+                <div className="mb-4 p-3 rounded-lg bg-sherpa/5 border border-cyan-500/15">
+                  <span className="text-[10px] uppercase tracking-wider text-cyan-400">Why Qumulo</span>
                   <p className="text-sm text-slate-300 mt-1">{c.why_qumulo}</p>
                 </div>
 

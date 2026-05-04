@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-* { scrollbar-width: thin; scrollbar-color: #13355A #0A1628; }
+* { scrollbar-width: thin; scrollbar-color: #1e293b #0a0e1a; }
 *::-webkit-scrollbar { width: 6px; }
-*::-webkit-scrollbar-track { background: #0A1628; }
-*::-webkit-scrollbar-thumb { background: #13355A; border-radius: 3px; }
+*::-webkit-scrollbar-track { background: #0a0e1a; }
+*::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }

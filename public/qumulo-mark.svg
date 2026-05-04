@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" width="72" height="72" role="img" aria-label="Q-Intel">
   <defs>
     <linearGradient id="qg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#FF6B35"/>
-      <stop offset="100%" stop-color="#E55A26"/>
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#003E51"/>
     </linearGradient>
   </defs>
   <circle cx="36" cy="36" r="30" fill="none" stroke="url(#qg)" stroke-width="5"/>
   <line x1="50" y1="50" x2="62" y2="62" stroke="url(#qg)" stroke-width="5" stroke-linecap="round"/>
-  <circle cx="36" cy="36" r="14" fill="#0E2A47" stroke="#FF6B35" stroke-width="2"/>
-  <text x="36" y="42" text-anchor="middle" font-family="Inter, system-ui, -apple-system, Segoe UI, sans-serif" font-weight="700" font-size="16" fill="#FF6B35">Q</text>
+  <circle cx="36" cy="36" r="14" fill="#0a0e1a" stroke="#22d3ee" stroke-width="2"/>
+  <text x="36" y="42" text-anchor="middle" font-family="Inter, system-ui, -apple-system, Segoe UI, sans-serif" font-weight="700" font-size="16" fill="#22d3ee">Q</text>
 </svg>
