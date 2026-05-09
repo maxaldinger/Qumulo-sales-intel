@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Users, AlertTriangle, ChevronRight, RefreshCw } from 'lucide-react'
+import { Users, AlertTriangle, ChevronRight, RefreshCw, Trash2 } from 'lucide-react'
 import type { AccountSummary } from '@/lib/account-planning'
 import AccountDetail from './account-planning-detail'
 
@@ -10,6 +10,7 @@ export default function AccountPlanning() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [deleting, setDeleting] = useState<Record<string, boolean>>({})
 
   const loadAccounts = useCallback(async () => {
     setLoading(true)
@@ -25,6 +26,27 @@ export default function AccountPlanning() {
       setLoading(false)
     }
   }, [])
+
+  /** Hard-delete an account from the plan. Cascades to contacts/roles/plan
+   *  row via FK. Used to clear out leftover Stardog-era seed accounts. */
+  const removeAccount = async (id: string, name: string) => {
+    if (!confirm(`Remove "${name}" from the plan? This deletes any mapped contacts and the intel brief. This cannot be undone.`)) return
+    setDeleting(p => ({ ...p, [id]: true }))
+    try {
+      const res = await fetch(`/api/account-planning/accounts?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error || 'Delete failed')
+      }
+      setAccounts(prev => prev.filter(a => a.id !== id))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Delete failed')
+    } finally {
+      setDeleting(p => { const n = { ...p }; delete n[id]; return n })
+    }
+  }
 
   useEffect(() => {
     loadAccounts()
@@ -74,7 +96,7 @@ export default function AccountPlanning() {
 
       {!loading && accounts.length === 0 && !error && (
         <div className="p-12 rounded-xl bg-white/[0.03] border border-white/10 text-center text-slate-400 text-sm">
-          No accounts yet. Add accounts in the Territory Plan tab to start mapping contacts.
+          No accounts yet. Use <span className="text-cyan-300">Add to Plan</span> in the Territory Plan tab to populate this view.
         </div>
       )}
 
@@ -86,18 +108,22 @@ export default function AccountPlanning() {
             <div className="col-span-1 text-center">Contacts</div>
             <div className="col-span-2">Coverage</div>
             <div className="col-span-2">Risk</div>
-            <div className="col-span-1 text-right">Updated</div>
+            <div className="col-span-1 text-right">&nbsp;</div>
           </div>
           {accounts.map(a => (
-            <button
+            <div
               key={a.id}
-              onClick={() => setSelectedId(a.id)}
-              className="w-full grid grid-cols-12 gap-4 items-center px-4 py-4 text-left border-b border-white/5 hover:bg-white/[0.02] transition-colors group"
+              className="grid grid-cols-12 gap-4 items-center px-4 py-4 border-b border-white/5 hover:bg-white/[0.02] transition-colors group"
             >
-              <div className="col-span-4 flex items-center gap-2">
+              {/* Identity column — clickable to open detail */}
+              <button
+                type="button"
+                onClick={() => setSelectedId(a.id)}
+                className="col-span-4 flex items-center gap-2 text-left"
+              >
                 <Users className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors" />
                 <span className="text-sm font-medium text-white">{a.name}</span>
-              </div>
+              </button>
               <div className="col-span-2 text-xs text-slate-400">
                 {a.vertical || 'Not yet mapped'}
               </div>
@@ -119,13 +145,29 @@ export default function AccountPlanning() {
                   <span className="text-[10px] text-emerald-400">OK</span>
                 )}
               </div>
-              <div className="col-span-1 flex items-center justify-end gap-1">
+              <div className="col-span-1 flex items-center justify-end gap-1.5">
                 <span className="text-[10px] text-slate-500">
                   {a.last_updated ? formatDate(a.last_updated) : 'Never'}
                 </span>
-                <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-slate-300 transition-colors" />
+                <button
+                  type="button"
+                  onClick={() => removeAccount(a.id, a.name)}
+                  disabled={!!deleting[a.id]}
+                  title="Remove this account from the plan"
+                  className="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedId(a.id)}
+                  className="p-1 rounded text-slate-600 hover:text-slate-300 transition-colors"
+                  title="Open account"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
               </div>
-            </button>
+            </div>
           ))}
         </div>
       )}
