@@ -692,10 +692,13 @@ export default function TerritoryPlan() {
           </div>
           <div className="text-2xl font-bold text-white">{allAccounts.length}</div>
         </div>
-        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+        <div
+          className="p-4 rounded-xl bg-white/5 border border-white/10"
+          title="Sum of the low end of each account's hypothesis-flagged est_acv range. Not a forecast, not a real pipeline — just the floor of the guesses, added up."
+        >
           <div className="flex items-center gap-2 mb-1">
             <DollarSign className="w-4 h-4 text-emerald-400" />
-            <span className="text-xs text-slate-400">Pipeline (low band)</span>
+            <span className="text-xs text-slate-400">&Sigma; low-band hypothesis</span>
           </div>
           <div className="text-2xl font-bold text-white">${(totalPipeline / 1000000).toFixed(1)}M</div>
         </div>
