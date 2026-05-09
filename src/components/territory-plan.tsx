@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
-import { MapPin, DollarSign, Building2, ChevronDown, ChevronUp, RefreshCw, Sparkles, ExternalLink, Copy, Check, List, Map, Upload, X, Loader2, Filter as FilterIcon } from 'lucide-react'
+import { MapPin, DollarSign, Building2, ChevronDown, ChevronUp, RefreshCw, Sparkles, ExternalLink, Copy, Check, List, Map, Upload, X, Loader2, Search } from 'lucide-react'
 import { VERTICAL_COLORS } from '@/lib/types'
 import type { Intel, Contact } from '@/lib/types'
 import { resolveStateFilter, stateAbbrToName } from '@/lib/us-states'
@@ -261,36 +261,40 @@ export default function TerritoryPlan() {
 
   const [view, setView] = useState<'list' | 'map'>('list')
 
-  const [showImport, setShowImport] = useState(false)
   const [importText, setImportText] = useState('')
   const [importing, setImporting] = useState(false)
   const [importProgress, setImportProgress] = useState<Record<string, 'pending' | 'loading' | 'done' | 'error'>>({})
   const [importedAccounts, setImportedAccounts] = useState<Account[]>([])
   const [includeDefaults, setIncludeDefaults] = useState(true)
   /**
-   * Active state filters (e.g. "AZ", "CO"). When the import textarea contains
-   * a recognized state name, that line is treated as a filter — not a fake
-   * company. State filter takes precedence over the "Include default accounts"
-   * toggle: if a filter is active, defaults outside the filtered states are
-   * excluded too.
+   * Free-text search filter. If the trimmed input resolves to a US state via
+   * resolveStateFilter ("AZ", "Arizona", "WA", "Washington"), accounts are
+   * matched strictly on hq_state. Otherwise the input is treated as a
+   * case-insensitive substring against hq_city, hq_state, and company name.
+   * Empty string disables the filter.
    */
-  const [stateFilter, setStateFilter] = useState<Set<string>>(new Set())
+  const [searchTerm, setSearchTerm] = useState('')
 
   const allAccounts = useMemo(() => {
     const base = includeDefaults ? DEFAULT_ACCOUNTS : []
     const combined = [...base, ...importedAccounts]
-    const stateScoped = stateFilter.size === 0
-      ? combined
-      : combined.filter(a => stateFilter.has((a.hq_state || '').toUpperCase()))
-    return stateScoped.map((a, i) => ({ ...a, rank: i + 1 }))
-  }, [includeDefaults, importedAccounts, stateFilter])
-
-  const clearStateFilter = (abbr?: string) => {
-    if (!abbr) { setStateFilter(new Set()); return }
-    setStateFilter(prev => {
-      const next = new Set(prev); next.delete(abbr); return next
-    })
-  }
+    const term = searchTerm.trim()
+    let scoped = combined
+    if (term) {
+      const stateAbbr = resolveStateFilter(term)
+      if (stateAbbr) {
+        scoped = combined.filter(a => (a.hq_state || '').toUpperCase() === stateAbbr)
+      } else {
+        const needle = term.toLowerCase()
+        scoped = combined.filter(a =>
+          (a.hq_city || '').toLowerCase().includes(needle) ||
+          (a.hq_state || '').toLowerCase().includes(needle) ||
+          (a.company || '').toLowerCase().includes(needle)
+        )
+      }
+    }
+    return scoped.map((a, i) => ({ ...a, rank: i + 1 }))
+  }, [includeDefaults, importedAccounts, searchTerm])
 
   const totalPipeline = allAccounts.reduce((s, a) => {
     const match = a.est_acv.match(/\$([0-9.]+)([KMB])/i)
@@ -338,34 +342,8 @@ export default function TerritoryPlan() {
   }
 
   const importAccounts = async () => {
-    const rawLines = importText.split('\n').map(s => s.trim()).filter(Boolean)
-    if (!rawLines.length) return
-
-    /* First pass: split state-filter lines from real company lines. A state
-     * filter is only triggered when the ENTIRE line resolves to a state — a
-     * single token "Washington" sets WA, but "Washington Mutual" or
-     * "Washington, DC, ABC Bank" falls through to company import. */
-    const newStateFilters: string[] = []
-    const importLines: string[] = []
-    for (const line of rawLines) {
-      const abbr = resolveStateFilter(line)
-      if (abbr) newStateFilters.push(abbr)
-      else importLines.push(line)
-    }
-
-    if (newStateFilters.length > 0) {
-      setStateFilter(prev => {
-        const next = new Set(prev)
-        for (const abbr of newStateFilters) next.add(abbr)
-        return next
-      })
-    }
-
-    if (!importLines.length) {
-      // The textarea contained only state filters. Clear it and bail out.
-      setImportText('')
-      return
-    }
+    const importLines = importText.split('\n').map(s => s.trim()).filter(Boolean)
+    if (!importLines.length) return
 
     setImporting(true)
     const progress: Record<string, 'pending' | 'loading' | 'done' | 'error'> = {}
@@ -428,132 +406,121 @@ export default function TerritoryPlan() {
           <p className="text-sm text-slate-400">
             {allAccounts.length} pre-researched accounts in territory. Each has a visible incumbent at refresh, an unstructured-data signal, and a Qumulo wedge.
           </p>
-          {stateFilter.size > 0 && (
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <span className="text-[10px] uppercase tracking-wider text-slate-500 flex items-center gap-1">
-                <FilterIcon className="w-3 h-3" />
-                Filtering by:
-              </span>
-              {Array.from(stateFilter).map(abbr => (
-                <button
-                  key={abbr}
-                  onClick={() => clearStateFilter(abbr)}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/20 transition-all"
-                  title={`Clear ${stateAbbrToName(abbr)} filter`}
-                >
-                  {stateAbbrToName(abbr)} ({abbr})
-                  <X className="w-3 h-3" />
-                </button>
-              ))}
-              <button
-                onClick={() => clearStateFilter()}
-                className="text-[10px] uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors"
-              >
-                clear all
-              </button>
-            </div>
-          )}
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* List / Map toggle */}
+        <div className="flex rounded-lg border border-white/10 overflow-hidden">
           <button
-            onClick={() => setShowImport(p => !p)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-              showImport
-                ? 'bg-sherpa/20 text-cyan-400 border border-cyan-500/30'
-                : 'bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10 hover:text-slate-200'
+            onClick={() => setView('list')}
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-all ${
+              view === 'list' ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Upload className="w-3.5 h-3.5" />
-            Import
+            <List className="w-3.5 h-3.5" />
+            List
           </button>
-
-          <div className="flex rounded-lg border border-white/10 overflow-hidden">
-            <button
-              onClick={() => setView('list')}
-              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-all ${
-                view === 'list' ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <List className="w-3.5 h-3.5" />
-              List
-            </button>
-            <button
-              onClick={() => setView('map')}
-              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-all ${
-                view === 'map' ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Map className="w-3.5 h-3.5" />
-              Map
-            </button>
-          </div>
+          <button
+            onClick={() => setView('map')}
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-all ${
+              view === 'map' ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Map className="w-3.5 h-3.5" />
+            Map
+          </button>
         </div>
       </div>
 
-      {showImport && (
-        <div className="p-5 rounded-xl bg-white/[0.03] border border-white/10 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-semibold text-white">Import Accounts</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Paste one entry per line. Company alone, or Company, City, ST.</p>
-            </div>
-            <button onClick={() => setShowImport(false)} className="p-1 text-slate-500 hover:text-slate-300">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <textarea
-            value={importText}
-            onChange={e => setImportText(e.target.value)}
-            placeholder={'Company entries: "TGen, Phoenix, AZ" or just "Micron Technology"\nState filters: "Arizona", "WA", "New Mexico" — limits the list to that state'}
-            rows={5}
-            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 text-sm resize-none leading-relaxed"
+      {/* State / city search bar — resolves "Arizona" / "AZ" to a strict
+          state filter, otherwise treats the input as a substring against
+          city, state, and company. */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1 relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            placeholder='Filter by state or city — e.g. "Arizona", "WA", "Phoenix", "Salt Lake City"'
+            className="w-full pl-11 pr-9 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 text-sm"
           />
-
-          <div className="flex items-center gap-4">
+          {searchTerm && (
             <button
-              onClick={importAccounts}
-              disabled={importing || !importText.trim()}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-sherpa text-white font-medium text-sm hover:bg-[#005068] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded text-slate-500 hover:text-slate-200 hover:bg-white/5 transition-colors"
+              title="Clear filter"
             >
-              {importing ? (
-                <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Importing...</>
-              ) : (
-                <><Upload className="w-3.5 h-3.5" /> Import Accounts</>
-              )}
+              <X className="w-3.5 h-3.5" />
             </button>
-
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <button
-                onClick={() => setIncludeDefaults(p => !p)}
-                className={`relative w-9 h-5 rounded-full transition-colors ${includeDefaults ? 'bg-sherpa' : 'bg-white/10'}`}
-              >
-                <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${includeDefaults ? 'translate-x-4' : ''}`} />
-              </button>
-              <span className="text-xs text-slate-400">Include default accounts</span>
-            </label>
-          </div>
-
-          {Object.keys(importProgress).length > 0 && (
-            <div className="space-y-1.5">
-              {Object.entries(importProgress).map(([name, status]) => (
-                <div key={name} className="flex items-center gap-2 text-xs">
-                  {status === 'pending' && <div className="w-3.5 h-3.5 rounded-full border border-slate-600" />}
-                  {status === 'loading' && <Loader2 className="w-3.5 h-3.5 text-cyan-400 animate-spin" />}
-                  {status === 'done' && <Check className="w-3.5 h-3.5 text-emerald-400" />}
-                  {status === 'error' && <X className="w-3.5 h-3.5 text-red-400" />}
-                  <span className={status === 'done' ? 'text-slate-300' : status === 'error' ? 'text-red-400' : 'text-slate-400'}>
-                    {name}
-                  </span>
-                  {status === 'loading' && <span className="text-slate-500">Analyzing...</span>}
-                  {status === 'error' && <span className="text-red-500">Failed</span>}
-                </div>
-              ))}
-            </div>
           )}
         </div>
-      )}
+        {searchTerm.trim() && (() => {
+          const abbr = resolveStateFilter(searchTerm.trim())
+          return (
+            <span className="text-[10px] uppercase tracking-wider text-slate-500 whitespace-nowrap">
+              {abbr ? `state: ${stateAbbrToName(abbr)}` : 'substring match'}
+            </span>
+          )
+        })()}
+      </div>
+
+      {/* Import accounts — always visible. */}
+      <div className="p-5 rounded-xl bg-white/[0.03] border border-white/10 space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold text-white">Import Accounts</h3>
+          <p className="text-xs text-slate-400 mt-0.5">Paste one entry per line. Company alone, or Company, City, ST.</p>
+        </div>
+
+        <textarea
+          value={importText}
+          onChange={e => setImportText(e.target.value)}
+          placeholder={'TGen, Phoenix, AZ\nMicron Technology, Lehi, UT\nNREL, Golden, CO'}
+          rows={5}
+          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 text-sm resize-none leading-relaxed"
+        />
+
+        <div className="flex items-center gap-4">
+          <button
+            onClick={importAccounts}
+            disabled={importing || !importText.trim()}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-sherpa text-white font-medium text-sm hover:bg-[#005068] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {importing ? (
+              <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Importing...</>
+            ) : (
+              <><Upload className="w-3.5 h-3.5" /> Import Accounts</>
+            )}
+          </button>
+
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <button
+              onClick={() => setIncludeDefaults(p => !p)}
+              className={`relative w-9 h-5 rounded-full transition-colors ${includeDefaults ? 'bg-sherpa' : 'bg-white/10'}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${includeDefaults ? 'translate-x-4' : ''}`} />
+            </button>
+            <span className="text-xs text-slate-400">Include default accounts</span>
+          </label>
+        </div>
+
+        {Object.keys(importProgress).length > 0 && (
+          <div className="space-y-1.5">
+            {Object.entries(importProgress).map(([name, status]) => (
+              <div key={name} className="flex items-center gap-2 text-xs">
+                {status === 'pending' && <div className="w-3.5 h-3.5 rounded-full border border-slate-600" />}
+                {status === 'loading' && <Loader2 className="w-3.5 h-3.5 text-cyan-400 animate-spin" />}
+                {status === 'done' && <Check className="w-3.5 h-3.5 text-emerald-400" />}
+                {status === 'error' && <X className="w-3.5 h-3.5 text-red-400" />}
+                <span className={status === 'done' ? 'text-slate-300' : status === 'error' ? 'text-red-400' : 'text-slate-400'}>
+                  {name}
+                </span>
+                {status === 'loading' && <span className="text-slate-500">Analyzing...</span>}
+                {status === 'error' && <span className="text-red-500">Failed</span>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-3 gap-4">
         <div className="p-4 rounded-xl bg-white/5 border border-white/10">
