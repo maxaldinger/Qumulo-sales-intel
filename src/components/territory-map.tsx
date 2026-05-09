@@ -52,6 +52,7 @@ export default function TerritoryMap({ accounts }: { accounts: MapAccount[] }) {
             <strong>${a.company}</strong><br/>
             <span style="color:#94a3b8">${a.hq_city}, ${a.hq_state}</span><br/>
             <span style="color:#34d399;font-family:ui-monospace,monospace">${a.est_acv}</span>
+            <span style="margin-left:6px;padding:1px 6px;border-radius:9999px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;background:rgba(245,158,11,0.1);color:#fcd34d;border:1px solid rgba(245,158,11,0.3)">hypothesis</span>
           </div>`,
           { direction: 'top', offset: [0, -8], className: 'territory-tooltip' }
         )

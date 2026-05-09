@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import Image from 'next/image'
+import { useSearchParams } from 'next/navigation'
 import { Radio, MessageSquare, Map, Network, Shield, ShieldCheck, Users } from 'lucide-react'
 import SignalFeed from '@/components/signal-feed'
 import SalesAssist from '@/components/sales-assist'
@@ -18,9 +19,35 @@ const TABS = [
 
 const ADMIN_TAB = { id: 'graph', label: 'Architecture', Icon: Network }
 
+const VALID_TABS = new Set(['signals', 'sales-assist', 'territory', 'account-planning', 'graph'])
+
 export default function Dashboard() {
-  const [tab, setTab] = useState('signals')
+  return (
+    <Suspense fallback={null}>
+      <DashboardInner />
+    </Suspense>
+  )
+}
+
+function DashboardInner() {
+  const searchParams = useSearchParams()
+  // Initial tab is taken from the URL (?tab=sales-assist) so deep links from
+  // Signal Feed land directly on the right tab. Subsequent tab clicks update
+  // local state only — we don't push new URLs on every click.
+  const initialTab = (() => {
+    const t = searchParams.get('tab')
+    return t && VALID_TABS.has(t) ? t : 'signals'
+  })()
+  const [tab, setTab] = useState(initialTab)
   const [admin, setAdmin] = useState(false)
+
+  // Stay reactive to URL changes during the session (e.g. when Signal Feed
+  // calls router.push to deep-link into Sales Assist for a specific account).
+  useEffect(() => {
+    const t = searchParams.get('tab')
+    if (t && VALID_TABS.has(t) && t !== tab) setTab(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

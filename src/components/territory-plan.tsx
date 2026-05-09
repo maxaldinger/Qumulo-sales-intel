@@ -2,11 +2,28 @@
 
 import { useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
-import { MapPin, DollarSign, Building2, ChevronDown, ChevronUp, RefreshCw, Sparkles, ExternalLink, Copy, Check, List, Map, Upload, X, Loader2 } from 'lucide-react'
+import { MapPin, DollarSign, Building2, ChevronDown, ChevronUp, RefreshCw, Sparkles, ExternalLink, Copy, Check, List, Map, Upload, X, Loader2, Filter as FilterIcon } from 'lucide-react'
 import { VERTICAL_COLORS } from '@/lib/types'
 import type { Intel, Contact } from '@/lib/types'
+import { resolveStateFilter, stateAbbrToName } from '@/lib/us-states'
 
 const TerritoryMap = dynamic(() => import('./territory-map'), { ssr: false })
+
+/**
+ * Small inline pill that flags a UI value as an unverified hypothesis (AI
+ * pattern-match, not researched). Apply to labels of fields whose values
+ * are inferred — keeps the demo honest about what's grounded vs guessed.
+ */
+function HypothesisBadge({ title }: { title?: string }) {
+  return (
+    <span
+      title={title ?? 'Unverified hypothesis — pattern-matched from vertical, not researched'}
+      className="inline-flex items-center px-1.5 py-0 rounded-full text-[8px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-300 border border-amber-500/30"
+    >
+      hypothesis
+    </span>
+  )
+}
 
 interface Account {
   rank: number
@@ -19,7 +36,7 @@ interface Account {
   lat: number
   lng: number
   data_challenge: string
-  stardog_fit: string
+  qumulo_fit: string
   entry_strategy: string
   key_personas: string[]
   est_acv: string
@@ -41,7 +58,7 @@ const DEFAULT_ACCOUNTS: Account[] = [
     hq_state: 'AZ',
     lat: 33.4484, lng: -112.074,
     data_challenge: 'Sequencing throughput growing 40-60% YoY against an aging Isilon footprint. Researchers need NFS/SMB on the same data AWS HealthOmics consumes as S3.',
-    stardog_fit: 'Cloud-native single namespace running on-prem and in AWS, with NFS+SMB+S3 on the same dataset. NeuralCache delivers flash-class throughput at HDD economics. Eliminates the copy-to-S3 tax and rehydration latency.',
+    qumulo_fit: 'Cloud-native single namespace running on-prem and in AWS, with NFS+SMB+S3 on the same dataset. NeuralCache delivers flash-class throughput at HDD economics. Eliminates the copy-to-S3 tax and rehydration latency.',
     entry_strategy: 'Open through Director of Research Computing on the Isilon refresh cycle. Reference Wellcome Sanger and Hudson Alpha. Position multi-cloud parity as the unlock for AWS HealthOmics adoption.',
     key_personas: ['Chief Information Officer', 'Director of Research Computing', 'VP Bioinformatics', 'Cloud Architect'],
     est_acv: '$450K - $900K',
@@ -56,7 +73,7 @@ const DEFAULT_ACCOUNTS: Account[] = [
     hq_state: 'NM',
     lat: 35.8800, lng: -106.3031,
     data_challenge: 'Lustre HPC scratch is fine. Cross-program collaboration tier on aging NetApp is the friction point. NNSA pressure to consolidate vendors.',
-    stardog_fit: 'Software-defined platform on HPE / Dell hardware already on the lab approved list. Single namespace bridges NFS/SMB collaboration tiers. Real-time per-file analytics map cleanly to classified data lineage requirements.',
+    qumulo_fit: 'Software-defined platform on HPE / Dell hardware already on the lab approved list. Single namespace bridges NFS/SMB collaboration tiers. Real-time per-file analytics map cleanly to classified data lineage requirements.',
     entry_strategy: 'GSA / HPE GreenLake path. Lead with NREL reference. Target collaboration tier first, simulation tier later. ASC roadmap window in spring.',
     key_personas: ['CIO / Associate Director for IT', 'Division Leader, HPC', 'Director, Research Library', 'CISO'],
     est_acv: '$1M - $3M+',
@@ -71,7 +88,7 @@ const DEFAULT_ACCOUNTS: Account[] = [
     hq_state: 'NM',
     lat: 35.0844, lng: -106.6504,
     data_challenge: 'Mission systems data, simulation output, and classified collaboration spread across legacy NAS and Lustre. Cross-site replication to Livermore is operationally heavy.',
-    stardog_fit: 'Single global namespace bridges Albuquerque, Livermore, and selected GovCloud regions. Multi-protocol on the same data eliminates duplicate Windows-share copies. Software-defined ride-out across hardware refresh cycles.',
+    qumulo_fit: 'Single global namespace bridges Albuquerque, Livermore, and selected GovCloud regions. Multi-protocol on the same data eliminates duplicate Windows-share copies. Software-defined ride-out across hardware refresh cycles.',
     entry_strategy: 'Through systems integrators on the approved vendor list. Position the global namespace story for cross-site classification-aware replication. Reference LANL and NREL.',
     key_personas: ['CIO', 'Director, Computing & Information Systems', 'Manager, Mission Data', 'CISO'],
     est_acv: '$1M - $2.5M',
@@ -86,7 +103,7 @@ const DEFAULT_ACCOUNTS: Account[] = [
     hq_state: 'CO',
     lat: 39.7406, lng: -105.1719,
     data_challenge: 'Climate and grid simulation output growing fast. Researcher access to historical runs hampered by tape rehydration. Multiple departmental silos.',
-    stardog_fit: 'Already a known Qumulo footprint; expansion play. NeuralCache hot/warm tiering replaces tape-rehydration pain. Cloud-native option enables AWS bursts for grid simulation.',
+    qumulo_fit: 'Already a known Qumulo footprint; expansion play. NeuralCache hot/warm tiering replaces tape-rehydration pain. Cloud-native option enables AWS bursts for grid simulation.',
     entry_strategy: 'Account expansion. Target the grid simulation team and the climate modeling tier. Lead with NeuralCache for the warm-data resurrection problem.',
     key_personas: ['Director, Computational Science', 'Group Manager, HPC', 'Lead Storage Architect', 'Cloud Architect'],
     est_acv: '$300K - $700K expansion',
@@ -101,7 +118,7 @@ const DEFAULT_ACCOUNTS: Account[] = [
     hq_state: 'CO',
     lat: 39.5728, lng: -105.0739,
     data_challenge: 'Simulation, CAD, and mission-data tiers fragmented across NetApp and Isilon. Customer programs (USSF, NRO) increasingly require IL5/IL6 cloud-native architecture for the next bid.',
-    stardog_fit: 'Same software runs in customer datacenter and AWS GovCloud / Azure Government. Single namespace lets engineers work the same dataset on-prem or in the cloud. Multi-protocol unifies CAD (SMB), simulation (NFS), and ML pipelines (S3).',
+    qumulo_fit: 'Same software runs in customer datacenter and AWS GovCloud / Azure Government. Single namespace lets engineers work the same dataset on-prem or in the cloud. Multi-protocol unifies CAD (SMB), simulation (NFS), and ML pipelines (S3).',
     entry_strategy: 'Through Mission Systems CTO via program-of-record bids. Reference defense primes already on Qumulo. Position around USSF cloud mandates.',
     key_personas: ['Mission Systems CTO', 'Director, Cloud & Infrastructure Engineering', 'Geospatial Tech Lead', 'Program Capture Manager'],
     est_acv: '$600K - $1.5M per program',
@@ -116,7 +133,7 @@ const DEFAULT_ACCOUNTS: Account[] = [
     hq_state: 'UT',
     lat: 40.3916, lng: -111.8508,
     data_challenge: 'EDA verification farm hammers NFS metadata; ONTAP cluster sprawl creates operator headcount drag. AWS EDA burst breaks job-level SLAs due to data movement.',
-    stardog_fit: 'NFS at scale on a single cluster, with NeuralCache delivering the verification throughput. Same software runs in AWS so EDA burst stops being a data-movement project.',
+    qumulo_fit: 'NFS at scale on a single cluster, with NeuralCache delivering the verification throughput. Same software runs in AWS so EDA burst stops being a data-movement project.',
     entry_strategy: 'Through Director of EDA Compute and the Manufacturing IT VP at Lehi. Lead with consolidation TCO vs. NetApp cluster sprawl. Time to FY26 capacity buy.',
     key_personas: ['VP, Manufacturing IT', 'Director, EDA Compute & Storage', 'Principal Storage Architect', 'Cloud Architect, EDA'],
     est_acv: '$800K - $2M per fab',
@@ -131,7 +148,7 @@ const DEFAULT_ACCOUNTS: Account[] = [
     hq_state: 'AZ',
     lat: 33.3062, lng: -111.8413,
     data_challenge: 'CHIPS Act expansion drives capacity build-out. EDA, lithography sim, and defect imaging tiers spread across legacy NAS. Multi-fab coordination is a manual data-copy exercise.',
-    stardog_fit: 'Global namespace bridges Chandler, Ocotillo, and Hillsboro tiers. Cloud-native option for EDA burst. Real-time analytics on per-file access map cleanly to fab-floor data sovereignty needs.',
+    qumulo_fit: 'Global namespace bridges Chandler, Ocotillo, and Hillsboro tiers. Cloud-native option for EDA burst. Real-time analytics on per-file access map cleanly to fab-floor data sovereignty needs.',
     entry_strategy: 'Through site IT leadership at Ocotillo. Land a workload, expand. Time to CHIPS Act milestone capex unlocks.',
     key_personas: ['Site Director, Manufacturing IT', 'Principal Engineer, Storage Architecture', 'Director, EDA Computing', 'Cloud Architect'],
     est_acv: '$1M - $3M per fab',
@@ -146,7 +163,7 @@ const DEFAULT_ACCOUNTS: Account[] = [
     hq_state: 'CO',
     lat: 39.7392, lng: -104.9903,
     data_challenge: 'Seismic and geomodel data multi-PB per basin. Field ops in Permian and DJ Basin generate sensor data faster than the centralized tier can absorb. Cloud transformation underway but data gravity is real.',
-    stardog_fit: 'Cloud-native running in the operator\'s preferred cloud, with edge clusters in the basin replicating into the global namespace. NeuralCache addresses re-processing economics on the warm tier.',
+    qumulo_fit: 'Cloud-native running in the operator\'s preferred cloud, with edge clusters in the basin replicating into the global namespace. NeuralCache addresses re-processing economics on the warm tier.',
     entry_strategy: 'Through digital transformation office. Land the basin-edge use case first. Reference oil-and-gas peers. Position multi-cloud as a hedge against single-vendor lock.',
     key_personas: ['VP Digital Transformation', 'Director, Subsurface Data Science', 'Lead Cloud Architect', 'Field Ops IT Manager'],
     est_acv: '$400K - $900K initial',
@@ -161,7 +178,7 @@ const DEFAULT_ACCOUNTS: Account[] = [
     hq_state: 'UT',
     lat: 40.7649, lng: -111.8421,
     data_challenge: 'Carnegie R1 with major NIH and NSF programs. Imaging, genomics, and HPC tiers spread across departmental silos. Central IT under cost pressure on the Isilon refresh.',
-    stardog_fit: 'Single global namespace consolidates departmental sprawl over time. Software-defined ride-out independent of Dell/HPE relationship. Cloud-native option for AWS and Azure-backed research workloads.',
+    qumulo_fit: 'Single global namespace consolidates departmental sprawl over time. Software-defined ride-out independent of Dell/HPE relationship. Cloud-native option for AWS and Azure-backed research workloads.',
     entry_strategy: 'Existing Qumulo customer relationship; expansion play into Health Sciences and central IT consolidation. Reference CSU and NREL.',
     key_personas: ['CIO', 'Director, Center for High Performance Computing', 'Associate VP Research', 'Senior Storage Engineer'],
     est_acv: '$400K - $900K expansion',
@@ -176,7 +193,7 @@ const DEFAULT_ACCOUNTS: Account[] = [
     hq_state: 'CO',
     lat: 40.5853, lng: -105.0844,
     data_challenge: 'Aging Isilon in central IT. PI-controlled departmental storage sprawl. NSF and NIH data-management plans force central IT involvement.',
-    stardog_fit: 'Consolidates central tier and pulls in departmental sprawl over time. Cloud-native option lets PIs run AWS or Azure workloads against the same filesystem. Software-defined freedom from Dell hardware lock-in.',
+    qumulo_fit: 'Consolidates central tier and pulls in departmental sprawl over time. Cloud-native option lets PIs run AWS or Azure workloads against the same filesystem. Software-defined freedom from Dell hardware lock-in.',
     entry_strategy: 'Through CIO on the Isilon refresh in FY26. Reference University of Utah. Lead with the data-management-plan consolidation story for the Associate VP Research.',
     key_personas: ['CIO', 'Director, Research Computing & Cyberinfrastructure', 'Associate Vice President, Research', 'Senior Storage Engineer'],
     est_acv: '$300K - $700K initial',
@@ -250,11 +267,30 @@ export default function TerritoryPlan() {
   const [importProgress, setImportProgress] = useState<Record<string, 'pending' | 'loading' | 'done' | 'error'>>({})
   const [importedAccounts, setImportedAccounts] = useState<Account[]>([])
   const [includeDefaults, setIncludeDefaults] = useState(true)
+  /**
+   * Active state filters (e.g. "AZ", "CO"). When the import textarea contains
+   * a recognized state name, that line is treated as a filter — not a fake
+   * company. State filter takes precedence over the "Include default accounts"
+   * toggle: if a filter is active, defaults outside the filtered states are
+   * excluded too.
+   */
+  const [stateFilter, setStateFilter] = useState<Set<string>>(new Set())
 
   const allAccounts = useMemo(() => {
     const base = includeDefaults ? DEFAULT_ACCOUNTS : []
-    return [...base, ...importedAccounts].map((a, i) => ({ ...a, rank: i + 1 }))
-  }, [includeDefaults, importedAccounts])
+    const combined = [...base, ...importedAccounts]
+    const stateScoped = stateFilter.size === 0
+      ? combined
+      : combined.filter(a => stateFilter.has((a.hq_state || '').toUpperCase()))
+    return stateScoped.map((a, i) => ({ ...a, rank: i + 1 }))
+  }, [includeDefaults, importedAccounts, stateFilter])
+
+  const clearStateFilter = (abbr?: string) => {
+    if (!abbr) { setStateFilter(new Set()); return }
+    setStateFilter(prev => {
+      const next = new Set(prev); next.delete(abbr); return next
+    })
+  }
 
   const totalPipeline = allAccounts.reduce((s, a) => {
     const match = a.est_acv.match(/\$([0-9.]+)([KMB])/i)
@@ -286,9 +322,13 @@ export default function TerritoryPlan() {
     const company = parts[0]
     if (parts.length >= 3) {
       const city = parts[1]
-      const stateChunk = parts.slice(2).join(', ').trim()
-      const stateMatch = stateChunk.match(/^([A-Z]{2})(?:\s+\d{5})?$/i)
-      const state = stateMatch ? stateMatch[1].toUpperCase() : stateChunk.replace(/\s*\d{5}$/, '').trim()
+      const stateChunk = parts.slice(2).join(', ').trim().replace(/\s*\d{5}$/, '').trim()
+      // Try the existing 2-letter regex first, then fall back to the
+      // full-name resolver so "Washington" / "New Mexico" also normalize.
+      const twoLetter = stateChunk.match(/^([A-Z]{2})$/i)
+      const state = twoLetter
+        ? twoLetter[1].toUpperCase()
+        : (resolveStateFilter(stateChunk) ?? stateChunk)
       return { company, city, state }
     }
     if (parts.length === 2) {
@@ -298,15 +338,41 @@ export default function TerritoryPlan() {
   }
 
   const importAccounts = async () => {
-    const lines = importText.split('\n').map(s => s.trim()).filter(Boolean)
-    if (!lines.length) return
+    const rawLines = importText.split('\n').map(s => s.trim()).filter(Boolean)
+    if (!rawLines.length) return
+
+    /* First pass: split state-filter lines from real company lines. A state
+     * filter is only triggered when the ENTIRE line resolves to a state — a
+     * single token "Washington" sets WA, but "Washington Mutual" or
+     * "Washington, DC, ABC Bank" falls through to company import. */
+    const newStateFilters: string[] = []
+    const importLines: string[] = []
+    for (const line of rawLines) {
+      const abbr = resolveStateFilter(line)
+      if (abbr) newStateFilters.push(abbr)
+      else importLines.push(line)
+    }
+
+    if (newStateFilters.length > 0) {
+      setStateFilter(prev => {
+        const next = new Set(prev)
+        for (const abbr of newStateFilters) next.add(abbr)
+        return next
+      })
+    }
+
+    if (!importLines.length) {
+      // The textarea contained only state filters. Clear it and bail out.
+      setImportText('')
+      return
+    }
 
     setImporting(true)
     const progress: Record<string, 'pending' | 'loading' | 'done' | 'error'> = {}
-    lines.forEach(l => { progress[l] = 'pending' })
+    importLines.forEach(l => { progress[l] = 'pending' })
     setImportProgress({ ...progress })
 
-    for (const line of lines) {
+    for (const line of importLines) {
       const parsed = parseImportLine(line)
       setImportProgress(p => ({ ...p, [line]: 'loading' }))
       try {
@@ -337,7 +403,7 @@ export default function TerritoryPlan() {
             lat: coords.lat,
             lng: coords.lng,
             data_challenge: intel.data_challenge || '',
-            stardog_fit: intel.qumulo_fit || '',
+            qumulo_fit: intel.qumulo_fit || '',
             entry_strategy: intel.outreach_angle || '',
             key_personas: intel.target_contacts?.map(c => c.title) || [],
             est_acv: 'TBD',
@@ -362,6 +428,31 @@ export default function TerritoryPlan() {
           <p className="text-sm text-slate-400">
             {allAccounts.length} pre-researched accounts in territory. Each has a visible incumbent at refresh, an unstructured-data signal, and a Qumulo wedge.
           </p>
+          {stateFilter.size > 0 && (
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <span className="text-[10px] uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                <FilterIcon className="w-3 h-3" />
+                Filtering by:
+              </span>
+              {Array.from(stateFilter).map(abbr => (
+                <button
+                  key={abbr}
+                  onClick={() => clearStateFilter(abbr)}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/20 transition-all"
+                  title={`Clear ${stateAbbrToName(abbr)} filter`}
+                >
+                  {stateAbbrToName(abbr)} ({abbr})
+                  <X className="w-3 h-3" />
+                </button>
+              ))}
+              <button
+                onClick={() => clearStateFilter()}
+                className="text-[10px] uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors"
+              >
+                clear all
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -415,7 +506,7 @@ export default function TerritoryPlan() {
           <textarea
             value={importText}
             onChange={e => setImportText(e.target.value)}
-            placeholder={'TGen, Phoenix, AZ\nMicron Technology, Lehi, UT\nNREL, Golden, CO'}
+            placeholder={'Company entries: "TGen, Phoenix, AZ" or just "Micron Technology"\nState filters: "Arizona", "WA", "New Mexico" — limits the list to that state'}
             rows={5}
             className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 text-sm resize-none leading-relaxed"
           />
@@ -520,7 +611,13 @@ export default function TerritoryPlan() {
                       )}
                     </div>
                   </div>
-                  <span className="text-sm font-mono text-emerald-400">{a.est_acv}</span>
+                  <span
+                    className="text-sm font-mono text-emerald-400 flex items-center gap-1.5"
+                    title="Estimated ACV — pattern-matched from deal-size norms, not researched."
+                  >
+                    {a.est_acv}
+                    <HypothesisBadge title="Estimated ACV — pattern-matched from deal-size norms, not researched." />
+                  </span>
                   {isOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                 </button>
 
@@ -528,17 +625,26 @@ export default function TerritoryPlan() {
                   <div className="border-t border-white/10 p-4 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="p-3 rounded-lg bg-red-500/5 border border-red-500/10">
-                        <div className="text-[10px] uppercase tracking-wider text-red-400 mb-1">Incumbent Pain</div>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-[10px] uppercase tracking-wider text-red-400">Incumbent Pain</span>
+                          <HypothesisBadge />
+                        </div>
                         <p className="text-xs text-slate-300">{a.data_challenge}</p>
                       </div>
                       <div className="p-3 rounded-lg bg-sherpa/5 border border-cyan-500/20">
-                        <div className="text-[10px] uppercase tracking-wider text-cyan-400 mb-1">Qumulo Fit</div>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-[10px] uppercase tracking-wider text-cyan-400">Qumulo Fit</span>
+                          <HypothesisBadge />
+                        </div>
                         <p className="text-xs text-slate-300">{a.qumulo_fit}</p>
                       </div>
                     </div>
 
                     <div className="p-3 rounded-lg bg-violet-500/5 border border-violet-500/10">
-                      <div className="text-[10px] uppercase tracking-wider text-violet-400 mb-1">Entry Strategy</div>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-[10px] uppercase tracking-wider text-violet-400">Entry Strategy</span>
+                        <HypothesisBadge />
+                      </div>
                       <p className="text-xs text-slate-300">{a.entry_strategy}</p>
                     </div>
 

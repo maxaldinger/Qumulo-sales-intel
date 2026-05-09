@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { RefreshCw, ChevronDown, ChevronUp, Clock, Zap, Building2, TrendingUp, Search, Copy, Check, X } from 'lucide-react'
-import { Company, TimelineEntry, Intel, VERTICALS, VERTICAL_COLORS, URGENCY_COLORS, SIGNAL_ICONS } from '@/lib/types'
+import { useRouter } from 'next/navigation'
+import { RefreshCw, ChevronDown, ChevronUp, Clock, Zap, Building2, TrendingUp, Search, Copy, Check, X, ArrowRight, Info } from 'lucide-react'
+import { Company, TimelineEntry, Intel, VERTICALS, VERTICAL_COLORS, URGENCY_COLORS, SIGNAL_ICONS, SIGNAL_LABELS } from '@/lib/types'
 import IntelCard from './intel-card'
 
 const SEARCH_STEPS = [
@@ -14,6 +15,7 @@ const SEARCH_STEPS = [
 ]
 
 export default function SignalFeed() {
+  const router = useRouter()
   const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -113,6 +115,16 @@ export default function SignalFeed() {
     }
   }
 
+  /**
+   * Open Sales Assist with this account pre-selected. We use the SPA's
+   * tab-routing (page.tsx reads ?tab=) — Next App Router updates the URL
+   * client-side and useSearchParams in page.tsx + sales-assist.tsx reacts.
+   */
+  const openInSalesAssist = (accountName: string) => {
+    const params = new URLSearchParams({ tab: 'sales-assist', account: accountName })
+    router.push(`/?${params.toString()}`)
+  }
+
   const copyBrief = () => {
     if (!searchResult) return
     const text = `${searchResult.company_name} - Qumulo Intelligence Brief\n\nRelevance: ${searchResult.relevance_score}/100 (${searchResult.relevance_label})\n\n${searchResult.snapshot}\n\nQumulo Fit: ${searchResult.qumulo_fit}\nData Challenge: ${searchResult.data_challenge}\n\nOutreach:\nSubject: ${searchResult.email_subject}\n${searchResult.outreach_angle}\n\nTalking Points:\n${searchResult.talking_points?.map((t: string) => `- ${t}`).join('\n')}`
@@ -195,6 +207,15 @@ export default function SignalFeed() {
           <IntelCard intel={searchResult} />
         </div>
       )}
+
+      {/* Sources / enrichment note */}
+      <div className="flex items-start gap-2 text-[11px] text-slate-500">
+        <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-slate-600" />
+        <p>
+          Free public sources only: Google News RSS, USAspending.gov, NIH Reporter, SAM.gov, NSF Awards, SEC EDGAR, HPCwire, FierceHealthcare.
+          Paid enrichment (ZoomInfo / Apollo / Lusha) would significantly expand contact and intent coverage.
+        </p>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
@@ -321,6 +342,19 @@ export default function SignalFeed() {
                   <p className="text-sm text-slate-300 mt-1">{c.why_qumulo}</p>
                 </div>
 
+                {/* Per-card actions */}
+                <div className="flex items-center justify-end mb-3">
+                  <button
+                    type="button"
+                    onClick={() => openInSalesAssist(c.company)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 hover:text-cyan-200 border border-cyan-500/30 text-xs font-medium transition-all"
+                    title={`Open Sales Assist focused on ${c.company}`}
+                  >
+                    Open in Sales Assist
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
                 {/* Tabs */}
                 <div className="flex gap-4 mb-4 border-b border-white/10">
                   {['intel', 'timeline'].map(t => (
@@ -361,7 +395,7 @@ export default function SignalFeed() {
                           <div className="flex-1">
                             <span className="text-slate-300">{t.signal_text}</span>
                             <div className="flex items-center gap-2 mt-0.5 text-slate-500">
-                              <span>{SIGNAL_ICONS[t.signal_type] || ''} {t.signal_type}</span>
+                              <span>{SIGNAL_ICONS[t.signal_type] || ''} {SIGNAL_LABELS[t.signal_type] || t.signal_type}</span>
                               {t.signal_date && <span>{t.signal_date}</span>}
                             </div>
                           </div>

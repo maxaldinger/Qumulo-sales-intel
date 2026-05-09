@@ -86,14 +86,42 @@ export const URGENCY_COLORS: Record<string, string> = {
 }
 
 export const SIGNAL_ICONS: Record<string, string> = {
-  news:        '\u{1F4F0}',
-  funding:     '\u{1F4B0}',
-  hiring:      '\u{1F465}',
-  contract:    '\u{1F4CB}',
-  partnership: '\u{1F91D}',
-  earnings:    '\u{1F4CA}',
-  research:    '\u{1F52C}',
-  regulation:  '\u{2696}\u{FE0F}',
+  news:              '\u{1F4F0}',
+  funding:           '\u{1F4B0}',
+  hiring:            '\u{1F465}',
+  contract:          '\u{1F4CB}',
+  partnership:       '\u{1F91D}',
+  earnings:          '\u{1F4CA}',
+  research:          '\u{1F52C}',
+  regulation:        '\u{2696}\u{FE0F}',
+  nih_grant:         '\u{1F9EC}',  // DNA
+  sam_contract:      '\u{1F3DB}\u{FE0F}',  // classical building (gov)
+  nsf_award:         '\u{1F393}',  // mortar board
+  sec_filing:        '\u{1F4DC}',  // scroll
+  hpcwire_news:      '\u{26A1}',   // lightning (HPC)
+  fierce_healthcare: '\u{1FA7A}',  // stethoscope
+}
+
+/**
+ * Human-readable labels for signal_type values. Falls back to the raw type
+ * when no label is registered. Used by the Signal Feed timeline + signal
+ * badges throughout the app.
+ */
+export const SIGNAL_LABELS: Record<string, string> = {
+  news:              'News',
+  funding:           'Funding',
+  hiring:            'Hiring',
+  contract:          'Contract',
+  partnership:       'Partnership',
+  earnings:          'Earnings',
+  research:          'Research',
+  regulation:        'Regulation',
+  nih_grant:         'NIH Grant',
+  sam_contract:      'SAM.gov Contract',
+  nsf_award:         'NSF Award',
+  sec_filing:        'SEC Filing',
+  hpcwire_news:      'HPCwire',
+  fierce_healthcare: 'FierceHealthcare',
 }
 
 export const SCORE_COLORS: Record<string, string> = {

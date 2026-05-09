@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Copy, Check, ArrowDownNarrowWide, RefreshCw } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import { Copy, Check, ArrowDownNarrowWide, RefreshCw, Building2, X } from 'lucide-react'
 import SAInputBar, { type Tool, type Tone, type Methodology } from './sa-input-bar'
 import SALouBuilder from './sa-lou-builder'
 import SAThreadingBuilder from './sa-threading-builder'
@@ -67,13 +68,28 @@ const BUILDER_TOOLS: Tool[] = ['lou', 'threading', 'proposal', 'fit', 'deck', 'm
 /* ── Component ──────────────────────────────────────────── */
 
 export default function SalesAssist() {
+  const searchParams = useSearchParams()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(false)
   const [activeTool, setActiveTool] = useState<Tool>('general')
   const [tone, setTone] = useState<Tone>('Direct and confident')
   const [methodology, setMethodology] = useState<Methodology>('MEDDPICC')
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  /**
+   * Active account context. Set by the ?account= query param when a user
+   * deep-links from the Signal Feed ("Open in Sales Assist"). Surfaced as a
+   * chip near the top of the view and passed through to every builder as
+   * `dealName`. For chat tools (general/email/objections) it gets prepended
+   * to the first outgoing message so Claude has the account context.
+   */
+  const [selectedAccount, setSelectedAccount] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Pick up the ?account= param on mount and whenever the URL changes.
+  useEffect(() => {
+    const a = searchParams.get('account')
+    setSelectedAccount(a && a.trim() ? a.trim() : null)
+  }, [searchParams])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -99,10 +115,19 @@ export default function SalesAssist() {
     setLoading(true)
 
     try {
-      const apiMessages = updated.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }))
+      // If we have an account context and this is the rep's first message,
+      // prepend a system-style context line so Claude knows which account
+      // we're talking about. Only on the first turn — subsequent turns
+      // inherit context naturally.
+      const apiMessages = updated.map((m, idx) => {
+        if (idx === 0 && m.role === 'user' && selectedAccount) {
+          return {
+            role: m.role,
+            content: `[Account context: ${selectedAccount}]\n\n${m.content}`,
+          }
+        }
+        return { role: m.role, content: m.content }
+      })
 
       const res = await fetch('/api/sa-chat', {
         method: 'POST',
@@ -179,7 +204,7 @@ export default function SalesAssist() {
     const builderProps = {
       tone,
       methodology,
-      dealName: null as string | null,
+      dealName: selectedAccount,
     }
 
     return (
@@ -198,6 +223,8 @@ export default function SalesAssist() {
             hideTextarea
           />
         </div>
+
+        <AccountContextChip account={selectedAccount} onClear={() => setSelectedAccount(null)} />
 
         <div className="flex-1 overflow-y-auto">
           {activeTool === 'lou' && <SALouBuilder {...builderProps} />}
@@ -245,6 +272,8 @@ export default function SalesAssist() {
           hideTextarea
         />
       </div>
+
+      <AccountContextChip account={selectedAccount} onClear={() => setSelectedAccount(null)} />
 
       {/* Messages area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6">
@@ -370,6 +399,39 @@ export default function SalesAssist() {
           onToneChange={setTone}
           onMethodologyChange={setMethodology}
         />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Inline chip that surfaces the active account context (set via the
+ * ?account= deep-link from Signal Feed). Visible above the content area in
+ * both the builder and chat views. Clearing it removes the context but
+ * leaves the user on the same tab.
+ */
+function AccountContextChip({
+  account,
+  onClear,
+}: {
+  account: string | null
+  onClear: () => void
+}) {
+  if (!account) return null
+  return (
+    <div className="flex-shrink-0 px-4 pt-3 pb-2 border-b border-white/5">
+      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 text-xs">
+        <Building2 className="w-3.5 h-3.5" />
+        <span className="font-medium">Working on:</span>
+        <span className="font-mono">{account}</span>
+        <button
+          type="button"
+          onClick={onClear}
+          className="ml-1 text-cyan-300/70 hover:text-white transition-colors"
+          title="Clear account context"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   )
