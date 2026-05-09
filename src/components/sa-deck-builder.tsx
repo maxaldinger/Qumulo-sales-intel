@@ -31,58 +31,38 @@ export default function SaDeckBuilder({ dealName }: Props) {
   const [copied, setCopied] = useState(false)
   const [expandedNotes, setExpandedNotes] = useState<number | null>(null)
 
-  const selectedType = DECK_TYPES.find(dt => dt.value === deckType)
-
   const generate = async () => {
     setLoading(true)
     setError('')
     try {
-      const prompt = `Generate a ${selectedType?.label || deckType} presentation deck for ${dealName || 'a prospect'}.
-
-Deck type: ${deckType}
-Context/notes: ${notes || 'No additional notes provided.'}
-
-Create 8-12 slides. For each slide provide a title, content (bullet points, concise, presentation-style), and speaker_notes (talking points for the presenter).
-
-CRITICAL: Return ONLY a raw JSON array. No markdown fences. No backticks. No preamble text. No explanation. Start your response with [ and end with ].
-
-Format: [{"title":"...","content":"...","speaker_notes":"..."}]`
-
-      const r = await fetch('/api/sa-chat', {
+      // The server route owns the prompt + JSON parsing. We just send the
+      // user-controlled inputs and receive { slides } or { error }.
+      const r = await fetch('/api/sa-deck', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [{ role: 'user', content: prompt }],
-          tool: 'general',
+          deckType,
+          dealName,
+          notes,
         }),
       })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || 'Failed to generate deck')
 
-      let content = d.message || d.response || ''
-      // Strip markdown fences if present
-      const fenceMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/)
-      if (fenceMatch) content = fenceMatch[1]
-      content = content.trim()
-      // Find the JSON array in the response
-      const arrStart = content.indexOf('[')
-      const arrEnd = content.lastIndexOf(']')
-      if (arrStart === -1 || arrEnd === -1 || arrEnd <= arrStart) {
-        throw new Error('Could not find slide array in response')
-      }
-      const jsonStr = content.slice(arrStart, arrEnd + 1)
+      const incoming: unknown = d.slides
+      if (!Array.isArray(incoming)) throw new Error('Server returned no slides')
 
-      const parsed = JSON.parse(jsonStr)
+      interface RawSlide { title?: unknown; content?: unknown; speaker_notes?: unknown }
       setSlides(
-        parsed.map((s: any) => ({
-          title: s.title || '',
-          content: s.content || '',
-          speaker_notes: s.speaker_notes || '',
+        (incoming as RawSlide[]).map((s) => ({
+          title: typeof s.title === 'string' ? s.title : '',
+          content: typeof s.content === 'string' ? s.content : '',
+          speaker_notes: typeof s.speaker_notes === 'string' ? s.speaker_notes : '',
         }))
       )
       setMode('slides')
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to generate deck')
     } finally {
       setLoading(false)
     }
