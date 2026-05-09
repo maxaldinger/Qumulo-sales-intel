@@ -58,6 +58,21 @@ body {
 [data-theme="light"] .bg-\[\#0a0e1a\]   { background-color: var(--bg-app) !important; }
 [data-theme="light"] .bg-\[\#111827\]\/95 { background-color: var(--bg-header) !important; }
 
+/* Modal panels and floating menus that hardcoded their own dark hex.
+   Sales Assist follow-up chat (expand modal): #0f1729.
+   Knowledge graph SVG canvas:                 #060a14.
+   Sales Assist tone/methodology dropdown:     #0d1520.
+   Sales Assist <option> elements:             #0D1117 (case-sensitive). */
+[data-theme="light"] .bg-\[\#0f1729\] { background-color: #ffffff !important; }
+[data-theme="light"] .bg-\[\#060a14\] { background-color: #f1f5f9 !important; }
+[data-theme="light"] .bg-\[\#0d1520\] { background-color: #ffffff !important; }
+[data-theme="light"] .bg-\[\#0D1117\] { background-color: #ffffff !important; color: #0f172a !important; }
+
+/* Modal backdrop dim — bg-black/70 reads as a heavy ink wash on a
+   light page. Soften to a slate-tinted veil that still pops the modal. */
+[data-theme="light"] .bg-black\/70 { background-color: rgba(15, 23, 42, 0.30) !important; }
+[data-theme="light"] .bg-black\/50 { background-color: rgba(15, 23, 42, 0.22) !important; }
+
 /* Card surfaces — invert white/X tints onto a dark tint */
 [data-theme="light"] .bg-white\/5         { background-color: rgba(15, 23, 42, 0.05) !important; }
 [data-theme="light"] .bg-white\/10        { background-color: rgba(15, 23, 42, 0.08) !important; }
