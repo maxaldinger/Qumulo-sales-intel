@@ -46,10 +46,11 @@ interface Account {
   discovered?: boolean
 }
 
-/* Territory: AZ / NM / UT / CO commercial, $500M-$2B band with flex.
- * These are real public companies with visible unstructured-data signals
- * that map to Qumulo's wedge. The displacement story for each names the
- * likely incumbent.
+/* Default territory accounts. Real public companies with visible
+ * unstructured-data signals that map to Qumulo's wedge. The displacement
+ * story for each names the likely incumbent. Users can override the
+ * default scope via the search bar (any US state or city) or remove
+ * defaults entirely with the "Include default accounts" toggle.
  */
 const DEFAULT_ACCOUNTS: Account[] = [
   {
@@ -519,9 +520,9 @@ export default function TerritoryPlan() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white mb-1">Territory Attack Plan &mdash; AZ / NM / UT / CO Commercial</h2>
+          <h2 className="text-xl font-bold text-white mb-1">Territory Attack Plan</h2>
           <p className="text-sm text-slate-400">
-            {allAccounts.length} pre-researched accounts in territory. Each has a visible incumbent at refresh, an unstructured-data signal, and a Qumulo wedge.
+            Search any state or city to discover accounts. Add accounts to your plan to begin tracking.
           </p>
         </div>
 
@@ -583,8 +584,8 @@ export default function TerritoryPlan() {
 
       {/* Nationwide empty-state: when the search has zero matches against the
           combined defaults+imports list, offer AI discovery for that region.
-          The 11 hardcoded accounts cover Max's AZ/NM/UT/CO territory; this
-          unlocks the rest of the country on demand. */}
+          The default accounts give a starting list; the search and Discover
+          flow unlocks any US state or city on demand. */}
       {searchTerm.trim() && allAccounts.length === 0 && (
         <div className="p-5 rounded-xl bg-cyan-500/5 border border-cyan-500/20 space-y-3">
           <div className="flex items-start gap-3">
@@ -594,7 +595,7 @@ export default function TerritoryPlan() {
                 No territory accounts loaded for &ldquo;{searchTerm.trim()}&rdquo;.
               </p>
               <p className="text-xs text-slate-400 mt-1">
-                Default accounts cover AZ / NM / UT / CO. You can run AI discovery to surface ICP-fit accounts in this region, or import companies manually below.
+                Run AI discovery to surface ICP-fit accounts in this region, or import companies manually below.
               </p>
             </div>
           </div>
