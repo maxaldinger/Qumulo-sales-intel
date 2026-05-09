@@ -2,7 +2,147 @@
 @tailwind components;
 @tailwind utilities;
 
-* { scrollbar-width: thin; scrollbar-color: #1e293b #0a0e1a; }
+/* ──────────────────────────────────────────────────────────────────
+ * Theme switching
+ *
+ * The whole app was originally built dark — every component uses
+ * Tailwind utilities like `bg-white/5`, `text-white`, `text-slate-400`,
+ * `bg-[#0a0e1a]`, etc. Rather than retrofit every file with `dark:`
+ * prefixes, we add CSS overrides keyed off `[data-theme="light"]` on
+ * the <html> element. The dark theme is the default; toggling to
+ * light flips the most visible surfaces.
+ *
+ * The pre-hydration script in layout.tsx sets data-theme from
+ * localStorage before React renders, so there is no flash on reload.
+ * ────────────────────────────────────────────────────────────────── */
+
+:root, [data-theme="dark"] {
+  color-scheme: dark;
+  --bg-app:        #0a0e1a;
+  --bg-header:     rgba(17, 24, 39, 0.95);
+  --scroll-track:  #0a0e1a;
+  --scroll-thumb:  #1e293b;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg-app:        #f6f7fa;
+  --bg-header:     rgba(255, 255, 255, 0.95);
+  --scroll-track:  #e2e8f0;
+  --scroll-thumb:  #94a3b8;
+}
+
+* { scrollbar-width: thin; scrollbar-color: var(--scroll-thumb) var(--scroll-track); }
 *::-webkit-scrollbar { width: 6px; }
-*::-webkit-scrollbar-track { background: #0a0e1a; }
-*::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+*::-webkit-scrollbar-track { background: var(--scroll-track); }
+*::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 3px; }
+
+body {
+  background-color: var(--bg-app);
+  transition: background-color 150ms ease;
+}
+
+/* ── Light-theme overrides ──────────────────────────────────────
+ * These specifically rewrite the dark-theme Tailwind utilities used
+ * across the app. The `!important` keeps them winning against the
+ * Tailwind generated classes without having to touch components.
+ * Status colors (red, emerald, violet) and the sherpa brand teal are
+ * left alone — they read fine on both backgrounds.
+ * ────────────────────────────────────────────────────────────── */
+
+[data-theme="light"] body {
+  color: #0f172a !important;
+}
+
+/* Hardcoded dark backgrounds */
+[data-theme="light"] .bg-\[\#0a0e1a\]   { background-color: var(--bg-app) !important; }
+[data-theme="light"] .bg-\[\#111827\]\/95 { background-color: var(--bg-header) !important; }
+
+/* Card surfaces — invert white/X tints onto a dark tint */
+[data-theme="light"] .bg-white\/5         { background-color: rgba(15, 23, 42, 0.05) !important; }
+[data-theme="light"] .bg-white\/10        { background-color: rgba(15, 23, 42, 0.08) !important; }
+[data-theme="light"] .bg-white\/\[0\.02\] { background-color: rgba(15, 23, 42, 0.03) !important; }
+[data-theme="light"] .bg-white\/\[0\.03\] { background-color: rgba(15, 23, 42, 0.04) !important; }
+[data-theme="light"] .bg-white\/\[0\.04\] { background-color: rgba(15, 23, 42, 0.06) !important; }
+
+[data-theme="light"] .hover\:bg-white\/5:hover  { background-color: rgba(15, 23, 42, 0.06) !important; }
+[data-theme="light"] .hover\:bg-white\/10:hover { background-color: rgba(15, 23, 42, 0.10) !important; }
+
+/* Borders */
+[data-theme="light"] .border-white\/5  { border-color: rgba(15, 23, 42, 0.07) !important; }
+[data-theme="light"] .border-white\/10 { border-color: rgba(15, 23, 42, 0.12) !important; }
+[data-theme="light"] .border-white\/20 { border-color: rgba(15, 23, 42, 0.20) !important; }
+[data-theme="light"] .hover\:border-white\/20:hover { border-color: rgba(15, 23, 42, 0.22) !important; }
+
+/* Foreground text */
+[data-theme="light"] .text-white      { color: #0f172a !important; }
+[data-theme="light"] .text-slate-200  { color: #1e293b !important; }
+[data-theme="light"] .text-slate-300  { color: #334155 !important; }
+[data-theme="light"] .text-slate-400  { color: #475569 !important; }
+[data-theme="light"] .text-slate-500  { color: #64748b !important; }
+[data-theme="light"] .text-slate-600  { color: #94a3b8 !important; }
+[data-theme="light"] .placeholder-slate-500::placeholder { color: #94a3b8 !important; }
+[data-theme="light"] .placeholder-slate-600::placeholder { color: #cbd5e1 !important; }
+
+/* Accent text — the "300/400" variants vanish on white. Bump them
+   one step darker so they retain enough contrast for AA-ish reading. */
+[data-theme="light"] .text-cyan-300    { color: #0e7490 !important; }
+[data-theme="light"] .text-cyan-400    { color: #0891b2 !important; }
+[data-theme="light"] .text-emerald-300 { color: #047857 !important; }
+[data-theme="light"] .text-emerald-400 { color: #059669 !important; }
+[data-theme="light"] .text-violet-300  { color: #6d28d9 !important; }
+[data-theme="light"] .text-violet-400  { color: #7c3aed !important; }
+[data-theme="light"] .text-amber-300   { color: #b45309 !important; }
+[data-theme="light"] .text-amber-400   { color: #b45309 !important; }
+[data-theme="light"] .text-red-300     { color: #b91c1c !important; }
+[data-theme="light"] .text-red-400     { color: #dc2626 !important; }
+[data-theme="light"] .text-yellow-300  { color: #a16207 !important; }
+[data-theme="light"] .text-yellow-400  { color: #ca8a04 !important; }
+[data-theme="light"] .text-orange-300  { color: #c2410c !important; }
+[data-theme="light"] .text-orange-400  { color: #ea580c !important; }
+[data-theme="light"] .text-pink-300    { color: #be185d !important; }
+[data-theme="light"] .text-pink-400    { color: #db2777 !important; }
+[data-theme="light"] .text-teal-300    { color: #0f766e !important; }
+[data-theme="light"] .text-blue-300    { color: #1d4ed8 !important; }
+
+/* Muted brand teal pill text in the header sub-label */
+[data-theme="light"] .text-teal-300\/80     { color: rgba(15, 118, 110, 0.85) !important; }
+[data-theme="light"] .border-teal-400\/20   { border-color: rgba(15, 118, 110, 0.35) !important; }
+
+/* Sherpa-tinted card backgrounds — already low-opacity, but bump
+   them slightly so the panel reads on a light page. */
+[data-theme="light"] .bg-sherpa\/5  { background-color: rgba(0, 62, 81, 0.06) !important; }
+[data-theme="light"] .bg-sherpa\/10 { background-color: rgba(0, 62, 81, 0.10) !important; }
+[data-theme="light"] .bg-sherpa\/20 { background-color: rgba(0, 62, 81, 0.16) !important; }
+
+/* Cyan-tinted surfaces used for highlights / badges */
+[data-theme="light"] .bg-cyan-500\/5  { background-color: rgba(6, 182, 212, 0.08) !important; }
+[data-theme="light"] .bg-cyan-500\/10 { background-color: rgba(6, 182, 212, 0.12) !important; }
+[data-theme="light"] .bg-cyan-500\/20 { background-color: rgba(6, 182, 212, 0.18) !important; }
+[data-theme="light"] .border-cyan-500\/15 { border-color: rgba(6, 182, 212, 0.30) !important; }
+[data-theme="light"] .border-cyan-500\/20 { border-color: rgba(6, 182, 212, 0.35) !important; }
+[data-theme="light"] .border-cyan-500\/30 { border-color: rgba(6, 182, 212, 0.45) !important; }
+
+/* Amber hypothesis pills */
+[data-theme="light"] .bg-amber-500\/5  { background-color: rgba(245, 158, 11, 0.10) !important; }
+[data-theme="light"] .bg-amber-500\/10 { background-color: rgba(245, 158, 11, 0.16) !important; }
+[data-theme="light"] .border-amber-500\/30 { border-color: rgba(245, 158, 11, 0.55) !important; }
+
+/* Red error / risk panels */
+[data-theme="light"] .bg-red-500\/5  { background-color: rgba(220, 38, 38, 0.06) !important; }
+[data-theme="light"] .bg-red-500\/10 { background-color: rgba(220, 38, 38, 0.10) !important; }
+[data-theme="light"] .bg-red-500\/20 { background-color: rgba(220, 38, 38, 0.18) !important; }
+
+/* Violet panels (entry strategy, architect mode) */
+[data-theme="light"] .bg-violet-500\/5  { background-color: rgba(139, 92, 246, 0.07) !important; }
+[data-theme="light"] .bg-violet-500\/10 { background-color: rgba(139, 92, 246, 0.13) !important; }
+[data-theme="light"] .bg-violet-500\/20 { background-color: rgba(139, 92, 246, 0.20) !important; }
+[data-theme="light"] .border-violet-500\/20 { border-color: rgba(139, 92, 246, 0.35) !important; }
+[data-theme="light"] .border-violet-500\/30 { border-color: rgba(139, 92, 246, 0.45) !important; }
+
+/* Emerald (success / in-plan badge) */
+[data-theme="light"] .bg-emerald-500\/10 { background-color: rgba(5, 150, 105, 0.13) !important; }
+[data-theme="light"] .border-emerald-500\/20 { border-color: rgba(5, 150, 105, 0.40) !important; }
+
+/* User chat bubble was bright cyan; it stays cyan but a tone darker */
+[data-theme="light"] .bg-cyan-600 { background-color: #0e7490 !important; }

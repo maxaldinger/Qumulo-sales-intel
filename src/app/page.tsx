@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
-import { Radio, MessageSquare, Map, Network, Shield, ShieldCheck, Users } from 'lucide-react'
+import { Radio, MessageSquare, Map, Network, Shield, ShieldCheck, Users, Sun, Moon } from 'lucide-react'
 import SignalFeed from '@/components/signal-feed'
 import SalesAssist from '@/components/sales-assist'
 import TerritoryPlan from '@/components/territory-plan'
@@ -40,6 +40,33 @@ function DashboardInner() {
   })()
   const [tab, setTab] = useState(initialTab)
   const [admin, setAdmin] = useState(false)
+  /**
+   * Light/dark toggle. The actual <html data-theme> attribute is set
+   * pre-hydration by /theme-init.js. We mirror that into React state
+   * here on mount so the toggle button shows the right icon, then
+   * write back to <html> + localStorage on every change.
+   */
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const t = document.documentElement.getAttribute('data-theme')
+      if (t === 'light' || t === 'dark') setTheme(t)
+    }
+  }, [])
+
+  const toggleTheme = () => {
+    setTheme(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark'
+      try {
+        document.documentElement.setAttribute('data-theme', next)
+        localStorage.setItem('q-theme', next)
+      } catch {
+        // localStorage unavailable — DOM update still wins for this session.
+      }
+      return next
+    })
+  }
 
   // Stay reactive to URL changes during the session (e.g. when Signal Feed
   // calls router.push to deep-link into Sales Assist for a specific account).
@@ -94,6 +121,14 @@ function DashboardInner() {
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               Live
             </div>
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-white/5 transition-all"
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
             <button
               onClick={() => setAdmin(p => !p)}
               className={`p-2 rounded-lg transition-all ${

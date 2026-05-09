@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -8,8 +9,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="bg-[#0a0e1a] min-h-screen antialiased">{children}</body>
+    <html lang="en" data-theme="dark">
+      <head>
+        {/* Pre-hydration theme initializer — runs before React renders so
+            the page paints in the user's saved theme without a flash. */}
+        <Script src="/theme-init.js" strategy="beforeInteractive" />
+      </head>
+      <body className="min-h-screen antialiased">{children}</body>
     </html>
   )
 }
